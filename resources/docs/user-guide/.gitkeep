@@ -1,0 +1,11 @@
+# User Guide Documentation
+
+This directory contains markdown files for the user guide system.
+
+Each section should be a separate .md file named after the section identifier:
+- getting-started.md
+- requisitioner.md
+- approver.md
+- admin.md
+- workflow.md
+- faq.md

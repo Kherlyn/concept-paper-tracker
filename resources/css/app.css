@@ -1,0 +1,118 @@
+/* Import custom styles first */
+@import "./landing.css";
+@import "./markdown.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    /* Enhanced focus indicators for accessibility */
+    *:focus-visible {
+        outline: 2px solid theme("colors.indigo.500");
+        outline-offset: 2px;
+    }
+
+    /* Ensure sufficient color contrast */
+    body {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Skip to main content link for screen readers */
+    .skip-to-main {
+        position: absolute;
+        left: -9999px;
+        z-index: 999;
+        padding: 1em;
+        background-color: theme("colors.indigo.600");
+        color: white;
+        text-decoration: none;
+    }
+
+    .skip-to-main:focus {
+        left: 50%;
+        transform: translateX(-50%);
+        top: 1em;
+    }
+}
+
+@layer utilities {
+    @keyframes slide-in-right {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
+    }
+
+    /* Utility for screen reader only content */
+    .sr-only-focusable:not(:focus):not(:focus-within) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+}
+
+/* Responsive and Touch-Friendly Improvements */
+@layer base {
+    /* Ensure minimum touch target size of 44x44px for mobile */
+    @media (max-width: 768px) {
+        button,
+        a[role="button"],
+        input[type="button"],
+        input[type="submit"],
+        input[type="reset"],
+        [role="button"] {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Improve form input touch targets */
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        input[type="tel"],
+        input[type="url"],
+        input[type="search"],
+        select,
+        textarea {
+            min-height: 44px;
+            font-size: 16px; /* Prevents zoom on iOS */
+        }
+    }
+
+    /* Improve table scrolling on mobile */
+    @media (max-width: 768px) {
+        .overflow-x-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    /* Prevent text size adjustment on orientation change */
+    html {
+        -webkit-text-size-adjust: 100%;
+        -moz-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    /* Improve tap highlight color */
+    * {
+        -webkit-tap-highlight-color: rgba(99, 102, 241, 0.1);
+    }
+}

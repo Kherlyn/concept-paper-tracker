@@ -1,0 +1,346 @@
+/* Enhanced Markdown Styling for User Guide */
+
+/* Code block enhancements */
+.prose pre {
+    position: relative;
+    overflow-x: auto;
+    background-color: #1f2937;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.prose pre code {
+    display: block;
+    padding: 0;
+    color: #e5e7eb;
+    background: transparent;
+    font-size: 0.875rem;
+    line-height: 1.7;
+}
+
+/* Inline code styling */
+.prose :not(pre) > code {
+    background-color: #f3f4f6;
+    color: #4f46e5;
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
+    font-size: 0.875em;
+    font-weight: 500;
+}
+
+/* Table styling enhancements */
+.prose table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 2rem 0;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.prose thead {
+    background-color: #f9fafb;
+}
+
+.prose thead th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #111827;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.prose tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.prose tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+.prose tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* List styling enhancements */
+.prose ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+}
+
+.prose ul li {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0.375rem;
+}
+
+.prose ul li::marker {
+    color: #4f46e5;
+}
+
+.prose ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+}
+
+.prose ol li {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-left: 0.375rem;
+}
+
+.prose ol li::marker {
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* Nested lists */
+.prose ul ul,
+.prose ol ul,
+.prose ul ol,
+.prose ol ol {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Blockquote enhancements */
+.prose blockquote {
+    border-left: 4px solid #4f46e5;
+    background-color: #eef2ff;
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 0.375rem;
+    font-style: normal;
+}
+
+.prose blockquote p {
+    margin: 0;
+    color: #374151;
+}
+
+/* Heading enhancements */
+.prose h1 {
+    scroll-margin-top: 5rem;
+}
+
+.prose h2 {
+    scroll-margin-top: 5rem;
+}
+
+.prose h3 {
+    scroll-margin-top: 5rem;
+}
+
+.prose h4 {
+    scroll-margin-top: 5rem;
+}
+
+/* Link styling */
+.prose a {
+    color: #4f46e5;
+    text-decoration: underline;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.prose a:hover {
+    color: #3730a3;
+}
+
+/* Image styling */
+.prose img {
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin: 2rem auto;
+}
+
+/* Horizontal rule */
+.prose hr {
+    border-color: #e5e7eb;
+    margin: 2rem 0;
+}
+
+/* Strong/Bold text */
+.prose strong {
+    color: #111827;
+    font-weight: 600;
+}
+
+/* Emphasis/Italic text */
+.prose em {
+    color: #374151;
+    font-style: italic;
+}
+
+/* Keyboard key styling */
+.prose kbd {
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 0.25rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.875em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        monospace;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Syntax highlighting overrides for better visibility */
+.prose .hljs {
+    background: #1f2937;
+    color: #e5e7eb;
+}
+
+.prose .hljs-comment,
+.prose .hljs-quote {
+    color: #9ca3af;
+    font-style: italic;
+}
+
+.prose .hljs-keyword,
+.prose .hljs-selector-tag,
+.prose .hljs-subst {
+    color: #c084fc;
+    font-weight: 500;
+}
+
+.prose .hljs-number,
+.prose .hljs-literal,
+.prose .hljs-variable,
+.prose .hljs-template-variable,
+.prose .hljs-tag .hljs-attr {
+    color: #fbbf24;
+}
+
+.prose .hljs-string,
+.prose .hljs-doctag {
+    color: #34d399;
+}
+
+.prose .hljs-title,
+.prose .hljs-section,
+.prose .hljs-selector-id {
+    color: #60a5fa;
+    font-weight: 600;
+}
+
+.prose .hljs-type,
+.prose .hljs-class .hljs-title {
+    color: #fbbf24;
+}
+
+.prose .hljs-tag,
+.prose .hljs-name,
+.prose .hljs-attribute {
+    color: #60a5fa;
+    font-weight: normal;
+}
+
+.prose .hljs-regexp,
+.prose .hljs-link {
+    color: #34d399;
+}
+
+.prose .hljs-symbol,
+.prose .hljs-bullet {
+    color: #c084fc;
+}
+
+.prose .hljs-built_in,
+.prose .hljs-builtin-name {
+    color: #60a5fa;
+}
+
+.prose .hljs-meta {
+    color: #9ca3af;
+}
+
+.prose .hljs-deletion {
+    background: #fecaca;
+}
+
+.prose .hljs-addition {
+    background: #bbf7d0;
+}
+
+.prose .hljs-emphasis {
+    font-style: italic;
+}
+
+.prose .hljs-strong {
+    font-weight: 600;
+}
+
+/* Mermaid diagram styling (if used) */
+.prose .mermaid {
+    background-color: #f9fafb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 2rem 0;
+    overflow-x: auto;
+}
+
+/* Task list styling */
+.prose input[type="checkbox"] {
+    margin-right: 0.5rem;
+    cursor: pointer;
+}
+
+.prose .task-list-item {
+    list-style-type: none;
+    margin-left: -1.5rem;
+    padding-left: 1.5rem;
+}
+
+/* Definition list styling */
+.prose dl {
+    margin: 1.5rem 0;
+}
+
+.prose dt {
+    font-weight: 600;
+    color: #111827;
+    margin-top: 1rem;
+}
+
+.prose dd {
+    margin-left: 1.5rem;
+    margin-top: 0.25rem;
+    color: #4b5563;
+}
+
+/* Footnote styling */
+.prose .footnotes {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid #e5e7eb;
+    font-size: 0.875rem;
+}
+
+.prose .footnotes ol {
+    padding-left: 1rem;
+}
+
+/* Print styles */
+@media print {
+    .prose pre {
+        background-color: #f3f4f6 !important;
+        border: 1px solid #d1d5db;
+    }
+
+    .prose pre code {
+        color: #111827 !important;
+    }
+
+    .prose a {
+        text-decoration: underline;
+        color: #111827 !important;
+    }
+
+    .prose blockquote {
+        border-left: 4px solid #111827;
+        background-color: #f9fafb;
+    }
+}
