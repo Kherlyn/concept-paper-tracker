@@ -121,17 +121,25 @@ export default function Users({ users, filters, roles }) {
                             "X-CSRF-TOKEN": document.querySelector(
                                 'meta[name="csrf-token"]'
                             ).content,
+                            Accept: "application/json",
                         },
                     }
                 );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
                 const data = await response.json();
 
                 if (data.success) {
                     router.reload({ preserveScroll: true });
+                } else {
+                    alert(data.message || "Failed to activate user");
                 }
             } catch (error) {
                 console.error("Error toggling activation:", error);
+                alert("Failed to toggle user activation. Please try again.");
             } finally {
                 setIsTogglingActivation(false);
             }
@@ -174,9 +182,14 @@ export default function Users({ users, filters, roles }) {
                         "X-CSRF-TOKEN": document.querySelector(
                             'meta[name="csrf-token"]'
                         ).content,
+                        Accept: "application/json",
                     },
                 }
             );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
 
@@ -185,9 +198,12 @@ export default function Users({ users, filters, roles }) {
                 setUserToToggle(null);
                 setAffectedPapers([]);
                 router.reload({ preserveScroll: true });
+            } else {
+                alert(data.message || "Failed to deactivate user");
             }
         } catch (error) {
             console.error("Error deactivating user:", error);
+            alert("Failed to toggle user activation. Please try again.");
         } finally {
             setIsTogglingActivation(false);
         }
