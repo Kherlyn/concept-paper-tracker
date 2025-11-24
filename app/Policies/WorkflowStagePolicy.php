@@ -110,4 +110,32 @@ class WorkflowStagePolicy
 
     return true;
   }
+
+  /**
+   * Determine if the user can reassign the workflow stage.
+   * Only admins can reassign workflow stages.
+   *
+   * @param User $user
+   * @param WorkflowStage $stage
+   * @return bool
+   */
+  public function reassign(User $user, WorkflowStage $stage): bool
+  {
+    // User must be active
+    if (!$user->is_active) {
+      return false;
+    }
+
+    // Only admins can reassign stages
+    if ($user->role !== 'admin') {
+      return false;
+    }
+
+    // Cannot reassign completed stages
+    if ($stage->status === 'completed') {
+      return false;
+    }
+
+    return true;
+  }
 }

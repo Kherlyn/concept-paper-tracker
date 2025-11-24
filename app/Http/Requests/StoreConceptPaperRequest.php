@@ -25,7 +25,9 @@ class StoreConceptPaperRequest extends FormRequest
       'department' => ['required', 'string', 'max:255'],
       'title' => ['required', 'string', 'max:1000'],
       'nature_of_request' => ['required', 'in:regular,urgent,emergency'],
-      'attachment' => ['nullable', 'file', 'mimes:pdf', 'max:10240'], // 10MB max
+      'students_involved' => ['required', 'boolean'],
+      'deadline_option' => ['required', 'string', 'in:1_week,2_weeks,1_month,2_months,3_months'],
+      'attachment' => ['nullable', 'file', 'mimes:pdf,doc,docx', 'max:10240'], // 10MB max
     ];
   }
 
@@ -43,8 +45,12 @@ class StoreConceptPaperRequest extends FormRequest
       'title.max' => 'The title may not be greater than 1000 characters.',
       'nature_of_request.required' => 'Please select the nature of request.',
       'nature_of_request.in' => 'The nature of request must be regular, urgent, or emergency.',
+      'students_involved.required' => 'Please indicate whether students are involved.',
+      'students_involved.boolean' => 'The students involved field must be yes or no.',
+      'deadline_option.required' => 'Please select a deadline option.',
+      'deadline_option.in' => 'The deadline option must be one of the predefined options.',
       'attachment.file' => 'The attachment must be a valid file.',
-      'attachment.mimes' => 'The attachment must be a PDF file.',
+      'attachment.mimes' => 'The attachment must be a PDF or Word document (.pdf, .doc, .docx).',
       'attachment.max' => 'The attachment may not be greater than 10MB.',
     ];
   }

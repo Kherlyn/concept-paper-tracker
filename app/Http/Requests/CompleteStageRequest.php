@@ -26,6 +26,7 @@ class CompleteStageRequest extends FormRequest
   {
     return [
       'remarks' => ['nullable', 'string', 'max:1000'],
+      'signature' => ['required', 'string'], // Base64 encoded signature image
     ];
   }
 
@@ -39,6 +40,8 @@ class CompleteStageRequest extends FormRequest
     return [
       'remarks.string' => 'The remarks must be a valid text.',
       'remarks.max' => 'The remarks may not be greater than 1000 characters.',
+      'signature.required' => 'A digital signature is required to approve this stage.',
+      'signature.string' => 'The signature must be a valid format.',
     ];
   }
 }

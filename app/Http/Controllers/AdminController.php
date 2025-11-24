@@ -4,22 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\ConceptPaper;
+use App\Models\WorkflowStage;
 use App\Services\ReportService;
+use App\Services\WorkflowService;
+use App\Services\NotificationService;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\JsonResponse;
 
 class AdminController extends Controller
 {
+  use AuthorizesRequests;
   protected ReportService $reportService;
+  protected WorkflowService $workflowService;
+  protected NotificationService $notificationService;
 
-  public function __construct(ReportService $reportService)
-  {
+  public function __construct(
+    ReportService $reportService,
+    WorkflowService $workflowService,
+    NotificationService $notificationService
+  ) {
     $this->reportService = $reportService;
+    $this->workflowService = $workflowService;
+    $this->notificationService = $notificationService;
   }
 
   /**
@@ -30,7 +44,7 @@ class AdminController extends Controller
    */
   public function users(Request $request): Response
   {
-    $query = User::query();
+    $query = User::query()->with('deactivatedBy');
 
     // Filter by role if provided
     if ($request->has('role') && $request->role !== '') {
@@ -60,8 +74,20 @@ class AdminController extends Controller
       });
     }
 
-    // Order by created_at descending by default
-    $users = $query->orderBy('created_at', 'desc')->paginate(15);
+    // Sorting
+    $sortField = $request->get('sort', 'created_at');
+    $sortDirection = $request->get('direction', 'desc');
+
+    // Validate sort field to prevent SQL injection
+    $allowedSortFields = ['name', 'email', 'role', 'is_active', 'created_at', 'deactivated_at'];
+    if (!in_array($sortField, $allowedSortFields)) {
+      $sortField = 'created_at';
+    }
+
+    // Validate sort direction
+    $sortDirection = strtolower($sortDirection) === 'asc' ? 'asc' : 'desc';
+
+    $users = $query->orderBy($sortField, $sortDirection)->paginate(15);
 
     return Inertia::render('Admin/Users', [
       'users' => $users,
@@ -71,6 +97,8 @@ class AdminController extends Controller
         'school_year' => $request->school_year ?? '',
         'is_active' => $request->is_active ?? '',
         'search' => $request->search ?? '',
+        'sort' => $sortField,
+        'direction' => $sortDirection,
       ],
       'roles' => [
         'requisitioner' => 'Requisitioner',
@@ -194,5 +222,176 @@ class AdminController extends Controller
 
     return response()->download($filePath, 'concept-paper-' . $conceptPaper->tracking_number . '.pdf')
       ->deleteFileAfterSend(true);
+  }
+
+  /**
+   * Toggle user activation status.
+   * When deactivating, returns affected concept papers with pending stages.
+   *
+   * @param User $user
+   * @return JsonResponse
+   */
+  public function toggleActivation(User $user): JsonResponse
+  {
+    // Authorization check using policy
+    $this->authorize('toggleActivation', $user);
+
+    $newStatus = !$user->is_active;
+    $affectedPapers = [];
+
+    // If deactivating, get affected concept papers
+    if (!$newStatus) {
+      $affectedPapers = $this->getAffectedConceptPapers($user);
+
+      // Update user activation status
+      $user->update([
+        'is_active' => false,
+        'deactivated_at' => now(),
+        'deactivated_by' => Auth::id(),
+      ]);
+    } else {
+      // Activating user
+      $user->update([
+        'is_active' => true,
+        'deactivated_at' => null,
+        'deactivated_by' => null,
+      ]);
+    }
+
+    $status = $user->is_active ? 'activated' : 'deactivated';
+
+    return response()->json([
+      'success' => true,
+      'message' => "User {$status} successfully.",
+      'user' => $user->fresh(),
+      'affected_papers' => $affectedPapers,
+    ]);
+  }
+
+  /**
+   * Get all workflow stages currently assigned to a user.
+   * Returns concept papers with pending stages assigned to the user.
+   *
+   * @param User $user
+   * @return JsonResponse
+   */
+  public function getAssignedStages(User $user): JsonResponse
+  {
+    // Authorization check using policy
+    $currentUser = Auth::user();
+    if (!$currentUser) {
+      return response()->json([
+        'error' => 'Unauthenticated.'
+      ], 401);
+    }
+    $this->authorize('viewAssignedStages', $currentUser);
+
+    $affectedPapers = $this->getAffectedConceptPapers($user);
+
+    return response()->json([
+      'success' => true,
+      'affected_papers' => $affectedPapers,
+    ]);
+  }
+
+  /**
+   * Reassign a workflow stage to a different user.
+   * Records the reassignment in the audit trail and sends notifications.
+   *
+   * @param Request $request
+   * @param WorkflowStage $stage
+   * @return JsonResponse
+   */
+  public function reassignStage(Request $request, WorkflowStage $stage): JsonResponse
+  {
+    // Authorization check using policy
+    $this->authorize('reassign', $stage);
+
+    // Validate the request
+    $validated = $request->validate([
+      'new_user_id' => ['required', 'exists:users,id'],
+    ]);
+
+    $newUser = User::findOrFail($validated['new_user_id']);
+
+    // Validate that the new user is active
+    if (!$newUser->is_active) {
+      return response()->json([
+        'error' => 'Cannot reassign to an inactive user.'
+      ], 422);
+    }
+
+    // Validate that the new user has the matching role
+    if ($newUser->role !== $stage->assigned_role) {
+      return response()->json([
+        'error' => "The selected user does not have the required role ({$stage->assigned_role})."
+      ], 422);
+    }
+
+    // Store the previous user for notification
+    $previousUser = $stage->assignedUser;
+
+    // Perform the reassignment using WorkflowService
+    $this->workflowService->reassignStage($stage, $newUser, Auth::user());
+
+    // Send notification to the newly assigned user
+    if ($previousUser) {
+      $this->notificationService->sendStageReassignmentNotification(
+        $stage->fresh(),
+        $newUser,
+        $previousUser
+      );
+    } else {
+      // If there was no previous user, still notify the new user
+      $this->notificationService->notifyStageAssignment($stage->fresh());
+    }
+
+    return response()->json([
+      'success' => true,
+      'message' => 'Stage reassigned successfully.',
+      'stage' => $stage->fresh()->load(['assignedUser', 'conceptPaper']),
+    ]);
+  }
+
+  /**
+   * Helper method to get affected concept papers for a user.
+   * Returns concept papers with pending stages assigned to the user.
+   *
+   * @param User $user
+   * @return array
+   */
+  protected function getAffectedConceptPapers(User $user): array
+  {
+    // Get all pending or in-progress stages assigned to this user
+    $stages = WorkflowStage::where('assigned_user_id', $user->id)
+      ->whereIn('status', ['pending', 'in_progress'])
+      ->with(['conceptPaper', 'conceptPaper.requisitioner'])
+      ->get();
+
+    // Group by concept paper
+    $affectedPapers = [];
+    foreach ($stages as $stage) {
+      $paperId = $stage->conceptPaper->id;
+
+      if (!isset($affectedPapers[$paperId])) {
+        $affectedPapers[$paperId] = [
+          'id' => $stage->conceptPaper->id,
+          'title' => $stage->conceptPaper->title,
+          'tracking_number' => $stage->conceptPaper->tracking_number,
+          'requisitioner' => $stage->conceptPaper->requisitioner->name ?? 'Unknown',
+          'stages' => [],
+        ];
+      }
+
+      $affectedPapers[$paperId]['stages'][] = [
+        'id' => $stage->id,
+        'stage_name' => $stage->stage_name,
+        'stage_order' => $stage->stage_order,
+        'status' => $stage->status,
+        'assigned_role' => $stage->assigned_role,
+      ];
+    }
+
+    return array_values($affectedPapers);
   }
 }

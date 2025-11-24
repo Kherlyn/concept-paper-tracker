@@ -25,6 +25,8 @@
     },
     "dependencies": {
         "@heroicons/react": "^2.2.0",
+        "fabric": "^6.9.0",
+        "pdfjs-dist": "^5.4.394",
         "react-markdown": "^10.1.0",
         "rehype-highlight": "^7.0.2",
         "remark-gfm": "^4.0.1"

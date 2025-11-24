@@ -31,6 +31,9 @@ class ConceptPaperSeeder extends Seeder
     $paper1->title = 'Laboratory Equipment Upgrade';
     $paper1->nature_of_request = 'regular';
     $paper1->submitted_at = now()->subDays(20);
+    $paper1->students_involved = true;
+    $paper1->deadline_option = '1_month';
+    $paper1->deadline_date = now()->subDays(20)->addDays(30);
     $paper1->save();
 
     $workflowService->initializeWorkflow($paper1);
@@ -75,6 +78,9 @@ class ConceptPaperSeeder extends Seeder
     $paper2->title = 'Student Research Grant Program';
     $paper2->nature_of_request = 'urgent';
     $paper2->submitted_at = now()->subDays(5);
+    $paper2->students_involved = true;
+    $paper2->deadline_option = '2_weeks';
+    $paper2->deadline_date = now()->subDays(5)->addDays(14);
     $paper2->save();
 
     $workflowService->initializeWorkflow($paper2);
@@ -119,6 +125,9 @@ class ConceptPaperSeeder extends Seeder
     $paper3->title = 'Workshop Equipment Purchase';
     $paper3->nature_of_request = 'regular';
     $paper3->submitted_at = now()->subDays(10);
+    $paper3->students_involved = false;
+    $paper3->deadline_option = '1_week';
+    $paper3->deadline_date = now()->subDays(10)->addDays(7);
     $paper3->save();
 
     $workflowService->initializeWorkflow($paper3);
@@ -179,6 +188,9 @@ class ConceptPaperSeeder extends Seeder
     $paper4->title = 'Faculty Development Training';
     $paper4->nature_of_request = 'regular';
     $paper4->submitted_at = now()->subHours(2);
+    $paper4->students_involved = true;
+    $paper4->deadline_option = '2_months';
+    $paper4->deadline_date = now()->addDays(60);
     $paper4->save();
 
     $workflowService->initializeWorkflow($paper4);
@@ -198,6 +210,9 @@ class ConceptPaperSeeder extends Seeder
     $paper5->title = 'Library Book Acquisition';
     $paper5->nature_of_request = 'urgent';
     $paper5->submitted_at = now()->subDays(6);
+    $paper5->students_involved = true;
+    $paper5->deadline_option = '1_month';
+    $paper5->deadline_date = now()->subDays(6)->addDays(30);
     $paper5->save();
 
     $workflowService->initializeWorkflow($paper5);
@@ -258,6 +273,9 @@ class ConceptPaperSeeder extends Seeder
     $paper6->title = 'Emergency Server Repair';
     $paper6->nature_of_request = 'emergency';
     $paper6->submitted_at = now()->subDays(8);
+    $paper6->students_involved = false;
+    $paper6->deadline_option = '1_week';
+    $paper6->deadline_date = now()->subDays(8)->addDays(7);
     $paper6->save();
 
     $workflowService->initializeWorkflow($paper6);
@@ -304,6 +322,9 @@ class ConceptPaperSeeder extends Seeder
     $paper7->title = 'Student Scholarship Fund';
     $paper7->nature_of_request = 'regular';
     $paper7->submitted_at = now()->subDays(18);
+    $paper7->students_involved = true;
+    $paper7->deadline_option = '3_months';
+    $paper7->deadline_date = now()->subDays(18)->addDays(90);
     $paper7->save();
 
     $workflowService->initializeWorkflow($paper7);
@@ -351,6 +372,9 @@ class ConceptPaperSeeder extends Seeder
     $paper8->title = 'Marketing Materials Production';
     $paper8->nature_of_request = 'regular';
     $paper8->submitted_at = now()->subDays(35);
+    $paper8->students_involved = true;
+    $paper8->deadline_option = '2_months';
+    $paper8->deadline_date = now()->subDays(35)->addDays(60);
     $paper8->save();
 
     $workflowService->initializeWorkflow($paper8);

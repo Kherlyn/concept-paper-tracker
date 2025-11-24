@@ -98,15 +98,20 @@ class WorkflowStage extends Model
    * Mark the workflow stage as complete and advance to next stage.
    *
    * @param string|null $remarks
+   * @param string|null $signature
    * @return void
    */
-  public function complete(?string $remarks = null): void
+  public function complete(?string $remarks = null, ?string $signature = null): void
   {
     $this->status = 'completed';
     $this->completed_at = now();
 
     if ($remarks) {
       $this->remarks = $remarks;
+    }
+
+    if ($signature) {
+      $this->signature = $signature;
     }
 
     $this->save();

@@ -88,13 +88,34 @@ npm run dev
 
 8. **Start the queue worker**
 
-Email notifications are sent asynchronously via queue:
+Email notifications and background jobs (document conversion, deadline checks) are processed asynchronously via queue:
 
 ```bash
 php artisan queue:work
 ```
 
-9. **Start the development server**
+For development, you can use the `dev` script which runs the server, queue worker, and Vite concurrently:
+
+```bash
+composer dev
+```
+
+9. **Start the scheduler (optional for development)**
+
+The system includes scheduled tasks that run hourly:
+
+-   Check for reached deadlines and send notifications
+-   Check for overdue workflow stages
+
+To enable scheduled tasks in development:
+
+```bash
+php artisan schedule:work
+```
+
+Or add to your crontab for production (see Production Deployment section).
+
+10. **Start the development server**
 
 ```bash
 php artisan serve
@@ -282,6 +303,96 @@ The system implements a 9-stage sequential approval process:
 8. **Cheque Preparation** (4 days) - Accounting
 9. **Budget Release** (1 day) - Accounting
 
+## Background Jobs and Scheduled Tasks
+
+The system uses Laravel's queue system for asynchronous processing and scheduled tasks for automated monitoring.
+
+### Queue Jobs
+
+The following jobs are processed asynchronously:
+
+1. **ConvertDocumentJob** - Converts Word documents to PDF for in-browser preview
+
+    - Runs when a Word document is uploaded
+    - Uses PHPWord and dompdf libraries
+    - Implements retry logic with exponential backoff (3 attempts)
+
+2. **SendDeadlineNotificationJob** - Sends email notifications when deadlines are reached
+
+    - Dispatched by CheckDeadlinesJob
+    - Notifies requisitioner and current stage assignee
+    - Includes concept paper details and current status
+
+3. **SendApprovalNotificationJob** - Sends email notifications when papers are fully approved
+
+    - Dispatched when all workflow stages complete
+    - Notifies requisitioner and administrators
+    - Includes processing time summary
+
+4. **CheckOverdueStages** - Identifies and notifies about overdue workflow stages
+
+    - Scheduled to run hourly
+    - Sends notifications for stages exceeding their max_days limit
+
+5. **CheckDeadlinesJob** - Identifies concept papers that have reached their deadline
+    - Scheduled to run hourly
+    - Uses caching to ensure single notification per paper
+    - Dispatches SendDeadlineNotificationJob for each reached deadline
+
+### Scheduled Tasks
+
+The system automatically schedules the following tasks (configured in `routes/console.php`):
+
+```php
+// Runs every hour
+Schedule::job(new CheckOverdueStages)->hourly();
+Schedule::job(new CheckDeadlinesJob)->hourly();
+```
+
+### Running Background Jobs
+
+**Development:**
+
+```bash
+# Start queue worker
+php artisan queue:work
+
+# Start scheduler (for hourly tasks)
+php artisan schedule:work
+
+# Or use the combined dev script
+composer dev
+```
+
+**Production:**
+
+Configure Supervisor for queue workers and add cron job for scheduler (see Production Deployment section).
+
+### Monitoring Jobs
+
+```bash
+# View queue status
+php artisan queue:monitor
+
+# View failed jobs
+php artisan queue:failed
+
+# Retry failed jobs
+php artisan queue:retry all
+
+# Clear all failed jobs
+php artisan queue:flush
+```
+
+### Job Configuration
+
+Queue configuration is in `config/queue.php`:
+
+-   Default connection: `database` (suitable for small to medium applications)
+-   Retry attempts: 3 with exponential backoff
+-   Timeout: 90 seconds
+-   For production with high volume, consider switching to Redis
+
 ## User Guide
 
 The application includes a comprehensive in-app user guide accessible to all authenticated users.
@@ -374,6 +485,8 @@ Follow these steps to update user guide content:
 ## Documentation
 
 -   [System Documentation](docs/SYSTEM_DOCUMENTATION.md) - Complete technical documentation including database schema, API endpoints, and architecture
+-   [Dependencies Guide](docs/DEPENDENCIES.md) - Detailed information about external dependencies (PHPWord, Fabric.js, PDF.js) and their configuration
+-   [Queue and Scheduler Setup](docs/QUEUE_AND_SCHEDULER_SETUP.md) - Comprehensive guide for setting up and managing background jobs and scheduled tasks
 -   [Customization Guide](docs/CUSTOMIZATION.md) - Guide for customizing landing page, user registration, user guide, and styling
 -   [Email Setup Guide](docs/MAIL_SETUP.md) - Detailed mail configuration instructions
 -   [Email Notifications](docs/EMAIL_NOTIFICATIONS.md) - Complete notification system documentation

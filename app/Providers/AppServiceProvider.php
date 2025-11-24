@@ -18,7 +18,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Bind DocumentPreviewService interface to implementation
+        $this->app->bind(
+            \App\Services\Contracts\DocumentPreviewServiceInterface::class,
+            \App\Services\DocumentPreviewService::class
+        );
+
+        // Bind AnnotationService interface to implementation
+        $this->app->bind(
+            \App\Services\Contracts\AnnotationServiceInterface::class,
+            \App\Services\AnnotationService::class
+        );
     }
 
     /**

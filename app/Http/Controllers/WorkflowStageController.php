@@ -104,12 +104,13 @@ class WorkflowStageController extends Controller
 
     $this->workflowService->advanceToNextStage(
       $workflowStage,
-      $validated['remarks'] ?? null
+      $validated['remarks'] ?? null,
+      $validated['signature'] ?? null
     );
 
     return redirect()
       ->route('concept-papers.show', $workflowStage->conceptPaper->id)
-      ->with('success', 'Stage completed successfully. Workflow advanced to next stage.');
+      ->with('success', 'Stage approved successfully with digital signature. Workflow advanced to next stage.');
   }
 
   /**
@@ -131,6 +132,31 @@ class WorkflowStageController extends Controller
     return redirect()
       ->route('concept-papers.show', $workflowStage->conceptPaper->id)
       ->with('success', 'Workflow returned to previous stage.');
+  }
+
+  /**
+   * Reject the workflow stage and concept paper.
+   *
+   * @param Request $request
+   * @param WorkflowStage $workflowStage
+   * @return RedirectResponse
+   */
+  public function reject(Request $request, WorkflowStage $workflowStage): RedirectResponse
+  {
+    $this->authorize('complete', $workflowStage);
+
+    $validated = $request->validate([
+      'rejection_reason' => 'required|string|max:1000',
+    ]);
+
+    $this->workflowService->rejectStage(
+      $workflowStage,
+      $validated['rejection_reason']
+    );
+
+    return redirect()
+      ->route('concept-papers.show', $workflowStage->conceptPaper->id)
+      ->with('success', 'Concept paper has been rejected.');
   }
 
   /**

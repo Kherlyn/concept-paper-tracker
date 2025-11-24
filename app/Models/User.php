@@ -26,6 +26,8 @@ class User extends Authenticatable
         'school_year',
         'student_number',
         'is_active',
+        'deactivated_at',
+        'deactivated_by',
     ];
 
     /**
@@ -49,7 +51,19 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'deactivated_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Scope a query to only include active users.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 
     /**
@@ -100,5 +114,26 @@ class User extends Authenticatable
     public function auditLogs()
     {
         return $this->hasMany(\App\Models\AuditLog::class, 'user_id');
+    }
+
+    /**
+     * Relationship: Admin who deactivated this user.
+     */
+    public function deactivatedBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'deactivated_by');
+    }
+
+    /**
+     * Append deactivated_by_user to array/JSON serialization.
+     */
+    protected $appends = ['deactivated_by_user'];
+
+    /**
+     * Get the deactivated by user accessor.
+     */
+    public function getDeactivatedByUserAttribute()
+    {
+        return $this->deactivatedBy;
     }
 }

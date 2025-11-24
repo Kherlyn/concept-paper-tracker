@@ -1,5 +1,6 @@
 <?php
 
+use App\Jobs\CheckDeadlinesJob;
 use App\Jobs\CheckOverdueStages;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -11,3 +12,6 @@ Artisan::command('inspire', function () {
 
 // Schedule the CheckOverdueStages job to run hourly
 Schedule::job(new CheckOverdueStages)->hourly();
+
+// Schedule the CheckDeadlinesJob to run hourly
+Schedule::job(new CheckDeadlinesJob)->hourly();

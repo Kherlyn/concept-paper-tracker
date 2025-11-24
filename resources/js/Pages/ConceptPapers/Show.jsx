@@ -2,6 +2,8 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import StatusBadge from "@/Components/StatusBadge";
 import WorkflowTimeline from "@/Components/WorkflowTimeline";
 import StageActionModal from "@/Components/StageActionModal";
+import DocumentPreviewWithAnnotations from "@/Components/DocumentPreviewWithAnnotations";
+import DiscrepancySummary from "@/Components/DiscrepancySummary";
 import { Head, Link, router, usePage } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 
@@ -9,9 +11,12 @@ export default function Show({ paper, status_summary }) {
     const { auth, flash } = usePage().props;
     const [showCompleteModal, setShowCompleteModal] = useState(false);
     const [showReturnModal, setShowReturnModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
     const [showAttachmentModal, setShowAttachmentModal] = useState(false);
     const [showSuccessMessage, setShowSuccessMessage] = useState(false);
     const [showErrorMessage, setShowErrorMessage] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
+    const [previewAttachment, setPreviewAttachment] = useState(null);
 
     // Handle flash messages
     useEffect(() => {
@@ -47,13 +52,30 @@ export default function Show({ paper, status_summary }) {
     };
 
     const handleDownloadAttachment = (attachmentId) => {
-        // Note: This route will be implemented in task 15.2
-        // For now, we'll use a placeholder or check if route exists
-        try {
-            window.location.href = route("attachments.download", attachmentId);
-        } catch (error) {
-            console.error("Attachment download route not yet implemented");
-            alert("Attachment download functionality will be available soon.");
+        window.location.href = route("attachments.download", attachmentId);
+    };
+
+    const handlePreviewAttachment = (attachment) => {
+        setPreviewAttachment(attachment);
+        setShowPreviewModal(true);
+    };
+
+    const handleClosePreview = () => {
+        setShowPreviewModal(false);
+        setPreviewAttachment(null);
+    };
+
+    const handleNavigateToDiscrepancy = (discrepancyInfo) => {
+        // Find the attachment by ID
+        const attachment = paper.attachments.find(
+            (att) => att.id === discrepancyInfo.attachmentId
+        );
+
+        if (attachment) {
+            setPreviewAttachment(attachment);
+            setShowPreviewModal(true);
+            // Note: The page navigation would need to be handled by the DocumentPreview component
+            // We could pass the page number as a prop if needed
         }
     };
 
@@ -63,18 +85,18 @@ export default function Show({ paper, status_summary }) {
 
     const canCompleteStage =
         currentStage &&
-        currentStage.assigned_user_id === auth.user.id &&
+        currentStage.assigned_role === auth.user.role &&
         currentStage.status === "in_progress";
 
     const canReturnStage =
         currentStage &&
-        currentStage.assigned_user_id === auth.user.id &&
+        currentStage.assigned_role === auth.user.role &&
         currentStage.status === "in_progress" &&
         currentStage.stage_order > 1;
 
     const canAddAttachment =
         currentStage &&
-        currentStage.assigned_user_id === auth.user.id &&
+        currentStage.assigned_role === auth.user.role &&
         currentStage.status === "in_progress";
 
     return (
@@ -225,6 +247,32 @@ export default function Show({ paper, status_summary }) {
                                                     )}
                                             </span>
                                         )}
+                                        {/* Student Involvement Badge */}
+                                        {paper.students_involved !==
+                                            undefined && (
+                                            <span
+                                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    paper.students_involved
+                                                        ? "bg-blue-100 text-blue-800 border border-blue-200"
+                                                        : "bg-gray-100 text-gray-800 border border-gray-200"
+                                                }`}
+                                            >
+                                                {paper.students_involved ? (
+                                                    <>
+                                                        <svg
+                                                            className="mr-1 h-3 w-3"
+                                                            fill="currentColor"
+                                                            viewBox="0 0 20 20"
+                                                        >
+                                                            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+                                                        </svg>
+                                                        Students Involved
+                                                    </>
+                                                ) : (
+                                                    "No Students"
+                                                )}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -254,6 +302,28 @@ export default function Show({ paper, status_summary }) {
                                         {formatDate(paper.submitted_at)}
                                     </dd>
                                 </div>
+                                {/* Deadline Date - Display prominently */}
+                                {paper.deadline_date && (
+                                    <div>
+                                        <dt className="text-sm font-medium text-gray-500">
+                                            Deadline
+                                        </dt>
+                                        <dd
+                                            className={`mt-1 text-sm font-semibold ${
+                                                paper.is_deadline_reached
+                                                    ? "text-red-600"
+                                                    : "text-gray-900"
+                                            }`}
+                                        >
+                                            {formatDate(paper.deadline_date)}
+                                            {paper.is_deadline_reached && (
+                                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                    ⚠ Deadline Reached
+                                                </span>
+                                            )}
+                                        </dd>
+                                    </div>
+                                )}
                                 {paper.completed_at && (
                                     <div>
                                         <dt className="text-sm font-medium text-gray-500">
@@ -378,16 +448,28 @@ export default function Show({ paper, status_summary }) {
                                                                         attachment.file_name
                                                                     }
                                                                 </span>
-                                                                <button
-                                                                    onClick={() =>
-                                                                        handleDownloadAttachment(
-                                                                            attachment.id
-                                                                        )
-                                                                    }
-                                                                    className="text-indigo-600 hover:text-indigo-900 ml-2"
-                                                                >
-                                                                    Download
-                                                                </button>
+                                                                <div className="flex items-center space-x-2 ml-2">
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            handlePreviewAttachment(
+                                                                                attachment
+                                                                            )
+                                                                        }
+                                                                        className="text-indigo-600 hover:text-indigo-900"
+                                                                    >
+                                                                        Preview
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            handleDownloadAttachment(
+                                                                                attachment.id
+                                                                            )
+                                                                        }
+                                                                        className="text-indigo-600 hover:text-indigo-900"
+                                                                    >
+                                                                        Download
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         )
                                                     )}
@@ -408,7 +490,43 @@ export default function Show({ paper, status_summary }) {
                                                     }
                                                     className="inline-flex items-center justify-center px-3 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
                                                 >
-                                                    Complete Stage
+                                                    <svg
+                                                        className="h-4 w-4 mr-1"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        />
+                                                    </svg>
+                                                    Approve with Signature
+                                                </button>
+                                            )}
+                                            {canCompleteStage && (
+                                                <button
+                                                    onClick={() =>
+                                                        setShowRejectModal(true)
+                                                    }
+                                                    className="inline-flex items-center justify-center px-3 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                                >
+                                                    <svg
+                                                        className="h-4 w-4 mr-1"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <path
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            strokeWidth={2}
+                                                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                                        />
+                                                    </svg>
+                                                    Reject Paper
                                                 </button>
                                             )}
                                             {canReturnStage && (
@@ -485,22 +603,40 @@ export default function Show({ paper, status_summary }) {
                                                     </p>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() =>
-                                                    handleDownloadAttachment(
-                                                        attachment.id
-                                                    )
-                                                }
-                                                className="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                            >
-                                                Download
-                                            </button>
+                                            <div className="flex items-center space-x-2">
+                                                <button
+                                                    onClick={() =>
+                                                        handlePreviewAttachment(
+                                                            attachment
+                                                        )
+                                                    }
+                                                    className="inline-flex items-center px-3 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                                >
+                                                    Preview
+                                                </button>
+                                                <button
+                                                    onClick={() =>
+                                                        handleDownloadAttachment(
+                                                            attachment.id
+                                                        )
+                                                    }
+                                                    className="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                                >
+                                                    Download
+                                                </button>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
                     )}
+
+                    {/* Discrepancy Summary */}
+                    <DiscrepancySummary
+                        conceptPaperId={paper.id}
+                        onNavigateToDiscrepancy={handleNavigateToDiscrepancy}
+                    />
 
                     {/* Audit Trail */}
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
@@ -618,6 +754,14 @@ export default function Show({ paper, status_summary }) {
                     />
 
                     <StageActionModal
+                        isOpen={showRejectModal}
+                        onClose={() => setShowRejectModal(false)}
+                        stage={currentStage}
+                        action="reject"
+                        conceptPaperId={paper.id}
+                    />
+
+                    <StageActionModal
                         isOpen={showAttachmentModal}
                         onClose={() => setShowAttachmentModal(false)}
                         stage={currentStage}
@@ -625,6 +769,18 @@ export default function Show({ paper, status_summary }) {
                         conceptPaperId={paper.id}
                     />
                 </>
+            )}
+
+            {/* Document Preview Modal with Annotations */}
+            {previewAttachment && (
+                <DocumentPreviewWithAnnotations
+                    show={showPreviewModal}
+                    onClose={handleClosePreview}
+                    attachmentId={previewAttachment.id}
+                    conceptPaperId={paper.id}
+                    fileName={previewAttachment.file_name}
+                    readOnly={false}
+                />
             )}
         </AuthenticatedLayout>
     );

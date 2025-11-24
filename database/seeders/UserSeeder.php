@@ -102,6 +102,38 @@ class UserSeeder extends Seeder
                 'student_number' => null,
                 'is_active' => true,
             ],
+            [
+                'name' => 'Robert Senior VP',
+                'email' => 'senior_vp@example.com',
+                'password' => bcrypt('password'),
+                'role' => 'senior_vp',
+                'department' => 'Executive Office',
+                'school_year' => null,
+                'student_number' => null,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Patricia Executive VP',
+                'email' => 'senior_vp2@example.com',
+                'password' => bcrypt('password'),
+                'role' => 'senior_vp',
+                'department' => 'Executive Office',
+                'school_year' => null,
+                'student_number' => null,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Inactive User',
+                'email' => 'inactive@example.com',
+                'password' => bcrypt('password'),
+                'role' => 'auditor',
+                'department' => 'Audit Office',
+                'school_year' => null,
+                'student_number' => null,
+                'is_active' => false,
+                'deactivated_at' => now()->subDays(10),
+                'deactivated_by' => 6, // Admin user ID
+            ],
         ];
 
         foreach ($users as $userData) {

@@ -8,37 +8,54 @@ import FileUpload from "@/Components/FileUpload";
 import { Head, Link, useForm, usePage } from "@inertiajs/react";
 
 export default function Create() {
-    const { auth, flash } = usePage().props;
+    const { auth, flash, deadlineOptions } = usePage().props;
     const { data, setData, post, processing, errors, reset } = useForm({
         department: auth.user.department || "",
         title: "",
         nature_of_request: "regular",
+        students_involved: true,
+        deadline_option: "",
         attachment: null,
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        // Create FormData for file upload
-        const formData = new FormData();
-        formData.append("department", data.department);
-        formData.append("title", data.title);
-        formData.append("nature_of_request", data.nature_of_request);
-        if (data.attachment) {
-            formData.append("attachment", data.attachment);
-        }
-
         post(route("concept-papers.store"), {
-            data: formData,
             forceFormData: true,
+            preserveScroll: true,
             onSuccess: () => {
-                reset();
+                // Form will redirect to show page, no need to reset
+            },
+            onError: (errors) => {
+                console.error("Submission errors:", errors);
             },
         });
     };
 
     const handleFileUpload = (file) => {
         setData("attachment", file);
+    };
+
+    // Calculate deadline date based on selected option
+    const calculateDeadlineDate = () => {
+        if (!data.deadline_option || !deadlineOptions) return null;
+
+        const selectedOption = deadlineOptions.find(
+            (option) => option.key === data.deadline_option
+        );
+
+        if (!selectedOption) return null;
+
+        const today = new Date();
+        const deadlineDate = new Date(today);
+        deadlineDate.setDate(today.getDate() + selectedOption.days);
+
+        return deadlineDate.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
     };
 
     return (
@@ -171,15 +188,124 @@ export default function Create() {
                                     </p>
                                 </div>
 
+                                {/* Students Involved */}
+                                <div>
+                                    <InputLabel
+                                        htmlFor="students_involved"
+                                        value="Students Involved"
+                                    />
+                                    <div className="mt-2 space-y-2">
+                                        <label className="inline-flex items-center">
+                                            <input
+                                                type="radio"
+                                                name="students_involved"
+                                                value="true"
+                                                checked={
+                                                    data.students_involved ===
+                                                    true
+                                                }
+                                                onChange={() =>
+                                                    setData(
+                                                        "students_involved",
+                                                        true
+                                                    )
+                                                }
+                                                className="rounded-full border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                required
+                                            />
+                                            <span className="ml-2 text-sm text-gray-700">
+                                                Yes
+                                            </span>
+                                        </label>
+                                        <label className="inline-flex items-center ml-6">
+                                            <input
+                                                type="radio"
+                                                name="students_involved"
+                                                value="false"
+                                                checked={
+                                                    data.students_involved ===
+                                                    false
+                                                }
+                                                onChange={() =>
+                                                    setData(
+                                                        "students_involved",
+                                                        false
+                                                    )
+                                                }
+                                                className="rounded-full border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                required
+                                            />
+                                            <span className="ml-2 text-sm text-gray-700">
+                                                No
+                                            </span>
+                                        </label>
+                                    </div>
+                                    <InputError
+                                        message={errors.students_involved}
+                                        className="mt-2"
+                                    />
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Indicate whether students are involved
+                                        in this concept paper
+                                    </p>
+                                </div>
+
+                                {/* Deadline Selection */}
+                                <div>
+                                    <InputLabel
+                                        htmlFor="deadline_option"
+                                        value="Deadline"
+                                    />
+                                    <select
+                                        id="deadline_option"
+                                        value={data.deadline_option}
+                                        onChange={(e) =>
+                                            setData(
+                                                "deadline_option",
+                                                e.target.value
+                                            )
+                                        }
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                        required
+                                    >
+                                        <option value="">
+                                            Select a deadline...
+                                        </option>
+                                        {deadlineOptions &&
+                                            deadlineOptions.map((option) => (
+                                                <option
+                                                    key={option.key}
+                                                    value={option.key}
+                                                >
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                    </select>
+                                    <InputError
+                                        message={errors.deadline_option}
+                                        className="mt-2"
+                                    />
+                                    {data.deadline_option && (
+                                        <p className="mt-2 text-sm text-indigo-600 font-medium">
+                                            Deadline Date:{" "}
+                                            {calculateDeadlineDate()}
+                                        </p>
+                                    )}
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Select the timeframe for completing this
+                                        concept paper
+                                    </p>
+                                </div>
+
                                 {/* File Upload */}
                                 <div>
                                     <FileUpload
                                         label="Concept Paper Attachment (Optional)"
-                                        accept=".pdf"
+                                        accept=".pdf,.doc,.docx"
                                         maxSize={10}
                                         onUpload={handleFileUpload}
                                         error={errors.attachment}
-                                        helpText="Upload the concept paper document in PDF format"
+                                        helpText="Upload the concept paper document in PDF or Word format (.pdf, .doc, .docx)"
                                     />
                                 </div>
 

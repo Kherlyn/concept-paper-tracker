@@ -32,6 +32,8 @@ test('requisitioner can submit a concept paper', function () {
     'department' => 'Computer Science',
     'title' => 'Test Concept Paper',
     'nature_of_request' => 'regular',
+    'students_involved' => true,
+    'deadline_option' => '1_month',
   ]);
 
   $response->assertRedirect();
@@ -39,6 +41,8 @@ test('requisitioner can submit a concept paper', function () {
     'title' => 'Test Concept Paper',
     'department' => 'Computer Science',
     'requisitioner_id' => $user->id,
+    'students_involved' => true,
+    'deadline_option' => '1_month',
   ]);
 });
 
@@ -50,6 +54,8 @@ test('requisitioner can submit concept paper with PDF attachment', function () {
     'department' => 'Computer Science',
     'title' => 'Test Concept Paper',
     'nature_of_request' => 'urgent',
+    'students_involved' => false,
+    'deadline_option' => '2_weeks',
     'attachment' => $file,
   ]);
 

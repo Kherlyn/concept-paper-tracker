@@ -86,7 +86,7 @@ test('getStageAverages returns statistics for each workflow stage', function () 
 
   // Assert structure
   expect($averages)->toBeArray();
-  expect(count($averages))->toBe(9); // 9 workflow stages
+  expect(count($averages))->toBe(10); // 10 workflow stages
 
   // Assert first stage data
   $firstStageData = collect($averages)->firstWhere('stage_order', 1);

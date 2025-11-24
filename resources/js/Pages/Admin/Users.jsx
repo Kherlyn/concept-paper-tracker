@@ -4,11 +4,14 @@ import { Head, router, useForm } from "@inertiajs/react";
 import Modal from "@/Components/Modal";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
+import DangerButton from "@/Components/DangerButton";
 import TextInput from "@/Components/TextInput";
 import InputLabel from "@/Components/InputLabel";
 import InputError from "@/Components/InputError";
 import ValidationErrors from "@/Components/ValidationErrors";
 import StatusBadge from "@/Components/StatusBadge";
+import ConfirmationModal from "@/Components/ConfirmationModal";
+import StageReassignment from "@/Components/StageReassignment";
 
 export default function Users({ users, filters, roles }) {
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -20,6 +23,14 @@ export default function Users({ users, filters, roles }) {
     const [schoolYearFilter, setSchoolYearFilter] = useState(
         filters.school_year || ""
     );
+    const [showDeactivationWarning, setShowDeactivationWarning] =
+        useState(false);
+    const [showReassignmentModal, setShowReassignmentModal] = useState(false);
+    const [userToToggle, setUserToToggle] = useState(null);
+    const [affectedPapers, setAffectedPapers] = useState([]);
+    const [isTogglingActivation, setIsTogglingActivation] = useState(false);
+    const [sortField, setSortField] = useState("created_at");
+    const [sortDirection, setSortDirection] = useState("desc");
 
     const createForm = useForm({
         name: "",
@@ -96,10 +107,113 @@ export default function Users({ users, filters, roles }) {
         });
     };
 
-    const handleToggleActive = (user) => {
-        router.post(
-            `/admin/users/${user.id}/toggle-active`,
-            {},
+    const handleToggleActive = async (user) => {
+        // If activating, just do it directly
+        if (!user.is_active) {
+            setIsTogglingActivation(true);
+            try {
+                const response = await fetch(
+                    `/admin/users/${user.id}/toggle-activation`,
+                    {
+                        method: "PATCH",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "X-CSRF-TOKEN": document.querySelector(
+                                'meta[name="csrf-token"]'
+                            ).content,
+                        },
+                    }
+                );
+
+                const data = await response.json();
+
+                if (data.success) {
+                    router.reload({ preserveScroll: true });
+                }
+            } catch (error) {
+                console.error("Error toggling activation:", error);
+            } finally {
+                setIsTogglingActivation(false);
+            }
+            return;
+        }
+
+        // If deactivating, check for affected papers first
+        setIsTogglingActivation(true);
+        try {
+            const response = await fetch(
+                `/admin/users/${user.id}/assigned-stages`
+            );
+            const data = await response.json();
+
+            if (data.affected_papers && data.affected_papers.length > 0) {
+                // Show warning modal with affected papers
+                setUserToToggle(user);
+                setAffectedPapers(data.affected_papers);
+                setShowDeactivationWarning(true);
+            } else {
+                // No affected papers, proceed with deactivation
+                await performDeactivation(user);
+            }
+        } catch (error) {
+            console.error("Error checking assigned stages:", error);
+        } finally {
+            setIsTogglingActivation(false);
+        }
+    };
+
+    const performDeactivation = async (user) => {
+        setIsTogglingActivation(true);
+        try {
+            const response = await fetch(
+                `/admin/users/${user.id}/toggle-activation`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector(
+                            'meta[name="csrf-token"]'
+                        ).content,
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (data.success) {
+                setShowDeactivationWarning(false);
+                setUserToToggle(null);
+                setAffectedPapers([]);
+                router.reload({ preserveScroll: true });
+            }
+        } catch (error) {
+            console.error("Error deactivating user:", error);
+        } finally {
+            setIsTogglingActivation(false);
+        }
+    };
+
+    const handleSort = (field) => {
+        if (sortField === field) {
+            setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+        } else {
+            setSortField(field);
+            setSortDirection("asc");
+        }
+
+        router.get(
+            "/admin/users",
+            {
+                search: searchTerm,
+                role: roleFilter,
+                is_active: statusFilter,
+                school_year: schoolYearFilter,
+                sort: field,
+                direction:
+                    sortField === field && sortDirection === "asc"
+                        ? "desc"
+                        : "asc",
+            },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -248,8 +362,33 @@ export default function Users({ users, filters, roles }) {
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Student Number
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Status
+                                        <th
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                            onClick={() =>
+                                                handleSort("is_active")
+                                            }
+                                        >
+                                            <div className="flex items-center">
+                                                Activation Status
+                                                {sortField === "is_active" && (
+                                                    <svg
+                                                        className={`ml-1 h-4 w-4 transform ${
+                                                            sortDirection ===
+                                                            "desc"
+                                                                ? "rotate-180"
+                                                                : ""
+                                                        }`}
+                                                        fill="currentColor"
+                                                        viewBox="0 0 20 20"
+                                                    >
+                                                        <path
+                                                            fillRule="evenodd"
+                                                            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                                            clipRule="evenodd"
+                                                        />
+                                                    </svg>
+                                                )}
+                                            </div>
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
@@ -301,27 +440,83 @@ export default function Users({ users, filters, roles }) {
                                                     {user.student_number ||
                                                         "N/A"}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
-                                                    <label className="inline-flex items-center cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={
-                                                                user.is_active
-                                                            }
-                                                            onChange={() =>
-                                                                handleToggleActive(
-                                                                    user
-                                                                )
-                                                            }
-                                                            className="sr-only peer"
-                                                        />
-                                                        <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                                        <span className="ms-3 text-sm font-medium text-gray-900">
-                                                            {user.is_active
-                                                                ? "Active"
-                                                                : "Inactive"}
-                                                        </span>
-                                                    </label>
+                                                <td className="px-6 py-4">
+                                                    <div className="space-y-2">
+                                                        <div className="flex items-center">
+                                                            <label className="inline-flex items-center cursor-pointer">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={
+                                                                        user.is_active
+                                                                    }
+                                                                    onChange={() =>
+                                                                        handleToggleActive(
+                                                                            user
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        isTogglingActivation
+                                                                    }
+                                                                    className="sr-only peer"
+                                                                />
+                                                                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                                                <span className="ms-3 text-sm font-medium text-gray-900">
+                                                                    {user.is_active ? (
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                                            <svg
+                                                                                className="mr-1 h-3 w-3"
+                                                                                fill="currentColor"
+                                                                                viewBox="0 0 20 20"
+                                                                            >
+                                                                                <path
+                                                                                    fillRule="evenodd"
+                                                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                                                                    clipRule="evenodd"
+                                                                                />
+                                                                            </svg>
+                                                                            Active
+                                                                        </span>
+                                                                    ) : (
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                                            <svg
+                                                                                className="mr-1 h-3 w-3"
+                                                                                fill="currentColor"
+                                                                                viewBox="0 0 20 20"
+                                                                            >
+                                                                                <path
+                                                                                    fillRule="evenodd"
+                                                                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                                                    clipRule="evenodd"
+                                                                                />
+                                                                            </svg>
+                                                                            Inactive
+                                                                        </span>
+                                                                    )}
+                                                                </span>
+                                                            </label>
+                                                        </div>
+                                                        {!user.is_active &&
+                                                            user.deactivated_at && (
+                                                                <div className="text-xs text-gray-500">
+                                                                    <div>
+                                                                        Deactivated:{" "}
+                                                                        {new Date(
+                                                                            user.deactivated_at
+                                                                        ).toLocaleDateString()}
+                                                                    </div>
+                                                                    {user.deactivated_by_user && (
+                                                                        <div>
+                                                                            By:{" "}
+                                                                            {
+                                                                                user
+                                                                                    .deactivated_by_user
+                                                                                    .name
+                                                                            }
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <button
@@ -796,6 +991,182 @@ export default function Users({ users, filters, roles }) {
                     </div>
                 </form>
             </Modal>
+
+            {/* Deactivation Warning Modal */}
+            <Modal
+                show={showDeactivationWarning}
+                onClose={() => {
+                    setShowDeactivationWarning(false);
+                    setUserToToggle(null);
+                    setAffectedPapers([]);
+                }}
+                maxWidth="3xl"
+            >
+                <div className="p-6">
+                    <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                            <svg
+                                className="h-6 w-6 text-yellow-600"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                />
+                            </svg>
+                        </div>
+                        <div className="ml-3 flex-1">
+                            <h3 className="text-lg font-medium text-gray-900">
+                                Warning: User Has Pending Workflow Stages
+                            </h3>
+                            <div className="mt-2 text-sm text-gray-600">
+                                <p>
+                                    This user has {affectedPapers.length}{" "}
+                                    concept paper(s) with pending workflow
+                                    stages. You must reassign these stages
+                                    before deactivating the user.
+                                </p>
+                            </div>
+
+                            <div className="mt-4 max-h-96 overflow-y-auto">
+                                <h4 className="text-sm font-medium text-gray-900 mb-2">
+                                    Affected Concept Papers:
+                                </h4>
+                                <div className="space-y-3">
+                                    {affectedPapers.map((paper) => (
+                                        <div
+                                            key={paper.id}
+                                            className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <h5 className="font-medium text-gray-900">
+                                                        {paper.title}
+                                                    </h5>
+                                                    <p className="text-sm text-gray-600">
+                                                        Tracking:{" "}
+                                                        {paper.tracking_number}
+                                                    </p>
+                                                    <p className="text-sm text-gray-600">
+                                                        Requisitioner:{" "}
+                                                        {paper.requisitioner}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className="mt-2">
+                                                <p className="text-xs font-medium text-gray-700 mb-1">
+                                                    Pending Stages:
+                                                </p>
+                                                <div className="space-y-1">
+                                                    {paper.stages.map(
+                                                        (stage) => (
+                                                            <div
+                                                                key={stage.id}
+                                                                className="text-xs text-gray-600 flex items-center"
+                                                            >
+                                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                    {
+                                                                        stage.stage_name
+                                                                    }
+                                                                </span>
+                                                                <span className="ml-2">
+                                                                    Status:{" "}
+                                                                    {
+                                                                        stage.status
+                                                                    }
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div className="flex">
+                                    <div className="flex-shrink-0">
+                                        <svg
+                                            className="h-5 w-5 text-blue-400"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </div>
+                                    <div className="ml-3">
+                                        <p className="text-sm text-blue-700">
+                                            Please reassign these stages to
+                                            other active users before
+                                            deactivating this user.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end space-x-3">
+                        <SecondaryButton
+                            onClick={() => {
+                                setShowDeactivationWarning(false);
+                                setUserToToggle(null);
+                                setAffectedPapers([]);
+                            }}
+                        >
+                            Cancel
+                        </SecondaryButton>
+                        <PrimaryButton
+                            onClick={() => {
+                                setShowDeactivationWarning(false);
+                                setShowReassignmentModal(true);
+                            }}
+                        >
+                            Reassign Stages
+                        </PrimaryButton>
+                        <DangerButton
+                            onClick={() => {
+                                if (userToToggle) {
+                                    performDeactivation(userToToggle);
+                                }
+                            }}
+                            disabled={isTogglingActivation}
+                        >
+                            {isTogglingActivation
+                                ? "Deactivating..."
+                                : "Deactivate Anyway"}
+                        </DangerButton>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Stage Reassignment Modal */}
+            <StageReassignment
+                isOpen={showReassignmentModal}
+                onClose={() => {
+                    setShowReassignmentModal(false);
+                    setUserToToggle(null);
+                    setAffectedPapers([]);
+                }}
+                affectedPapers={affectedPapers}
+                userToDeactivate={userToToggle}
+                onReassignmentComplete={() => {
+                    // After successful reassignment, proceed with deactivation
+                    if (userToToggle) {
+                        performDeactivation(userToToggle);
+                    }
+                }}
+            />
         </AuthenticatedLayout>
     );
 }

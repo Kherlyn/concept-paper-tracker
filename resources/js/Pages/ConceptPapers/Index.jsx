@@ -7,12 +7,33 @@ import { useState } from "react";
 export default function Index({ papers, filters }) {
     const { auth } = usePage().props;
     const [statusFilter, setStatusFilter] = useState(filters.status || "");
+    const [studentsInvolvedFilter, setStudentsInvolvedFilter] = useState(
+        filters.students_involved !== undefined ? filters.students_involved : ""
+    );
 
     const handleStatusFilterChange = (status) => {
         setStatusFilter(status);
         router.get(
             route("concept-papers.index"),
-            { status: status || undefined },
+            {
+                status: status || undefined,
+                students_involved: studentsInvolvedFilter || undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            }
+        );
+    };
+
+    const handleStudentsInvolvedFilterChange = (value) => {
+        setStudentsInvolvedFilter(value);
+        router.get(
+            route("concept-papers.index"),
+            {
+                status: statusFilter || undefined,
+                students_involved: value || undefined,
+            },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -57,6 +78,59 @@ export default function Index({ papers, filters }) {
             key: "department",
             label: "Department",
             sortable: true,
+        },
+        {
+            key: "students_involved",
+            label: "Students",
+            sortable: true,
+            accessor: (paper) => paper.students_involved,
+            render: (paper) => (
+                <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        paper.students_involved
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                    }`}
+                >
+                    {paper.students_involved ? "Yes" : "No"}
+                </span>
+            ),
+        },
+        {
+            key: "deadline_date",
+            label: "Deadline",
+            sortable: true,
+            accessor: (paper) => paper.deadline_date,
+            render: (paper) => (
+                <div>
+                    {paper.deadline_date ? (
+                        <div>
+                            <div className="text-sm text-gray-900">
+                                {formatDate(paper.deadline_date)}
+                            </div>
+                            {paper.is_deadline_reached &&
+                                paper.status !== "completed" && (
+                                    <div className="flex items-center text-xs text-red-600 mt-0.5 font-semibold">
+                                        <svg
+                                            className="w-3 h-3 mr-1"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                        Deadline Reached
+                                    </div>
+                                )}
+                        </div>
+                    ) : (
+                        <span className="text-gray-500 text-sm">N/A</span>
+                    )}
+                </div>
+            ),
         },
         {
             key: "current_stage",
@@ -335,97 +409,172 @@ export default function Index({ papers, filters }) {
                     {/* Main Table Card */}
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                         <div className="p-4 sm:p-6">
-                            {/* Status Filter */}
-                            <div className="mb-6">
-                                <label
-                                    htmlFor="status-filter"
-                                    className="block text-sm font-medium text-gray-700 mb-2"
-                                >
-                                    Filter by Status
-                                </label>
-                                <div
-                                    className="flex flex-wrap gap-2"
-                                    role="group"
-                                    aria-label="Status filter buttons"
-                                    id="status-filter"
-                                >
-                                    <button
-                                        onClick={() =>
-                                            handleStatusFilterChange("")
-                                        }
-                                        className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                                            statusFilter === ""
-                                                ? "bg-indigo-600 text-white"
-                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                        }`}
-                                        aria-pressed={statusFilter === ""}
+                            {/* Filters Section */}
+                            <div className="mb-6 space-y-4">
+                                {/* Status Filter */}
+                                <div>
+                                    <label
+                                        htmlFor="status-filter"
+                                        className="block text-sm font-medium text-gray-700 mb-2"
                                     >
-                                        All
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            handleStatusFilterChange("pending")
-                                        }
-                                        className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                                            statusFilter === "pending"
-                                                ? "bg-indigo-600 text-white"
-                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                        }`}
-                                        aria-pressed={
-                                            statusFilter === "pending"
-                                        }
+                                        Filter by Status
+                                    </label>
+                                    <div
+                                        className="flex flex-wrap gap-2"
+                                        role="group"
+                                        aria-label="Status filter buttons"
+                                        id="status-filter"
                                     >
-                                        Pending
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            handleStatusFilterChange(
-                                                "in_progress"
-                                            )
-                                        }
-                                        className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                                            statusFilter === "in_progress"
-                                                ? "bg-indigo-600 text-white"
-                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                        }`}
-                                        aria-pressed={
-                                            statusFilter === "in_progress"
-                                        }
+                                        <button
+                                            onClick={() =>
+                                                handleStatusFilterChange("")
+                                            }
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                                statusFilter === ""
+                                                    ? "bg-indigo-600 text-white"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            }`}
+                                            aria-pressed={statusFilter === ""}
+                                        >
+                                            All
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleStatusFilterChange(
+                                                    "pending"
+                                                )
+                                            }
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                                statusFilter === "pending"
+                                                    ? "bg-indigo-600 text-white"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            }`}
+                                            aria-pressed={
+                                                statusFilter === "pending"
+                                            }
+                                        >
+                                            Pending
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleStatusFilterChange(
+                                                    "in_progress"
+                                                )
+                                            }
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                                statusFilter === "in_progress"
+                                                    ? "bg-indigo-600 text-white"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            }`}
+                                            aria-pressed={
+                                                statusFilter === "in_progress"
+                                            }
+                                        >
+                                            In Progress
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleStatusFilterChange(
+                                                    "completed"
+                                                )
+                                            }
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                                statusFilter === "completed"
+                                                    ? "bg-indigo-600 text-white"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            }`}
+                                            aria-pressed={
+                                                statusFilter === "completed"
+                                            }
+                                        >
+                                            Completed
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleStatusFilterChange(
+                                                    "returned"
+                                                )
+                                            }
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                                statusFilter === "returned"
+                                                    ? "bg-indigo-600 text-white"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            }`}
+                                            aria-pressed={
+                                                statusFilter === "returned"
+                                            }
+                                        >
+                                            Returned
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Student Involvement Filter */}
+                                <div>
+                                    <label
+                                        htmlFor="students-filter"
+                                        className="block text-sm font-medium text-gray-700 mb-2"
                                     >
-                                        In Progress
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            handleStatusFilterChange(
-                                                "completed"
-                                            )
-                                        }
-                                        className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                                            statusFilter === "completed"
-                                                ? "bg-indigo-600 text-white"
-                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                        }`}
-                                        aria-pressed={
-                                            statusFilter === "completed"
-                                        }
+                                        Filter by Student Involvement
+                                    </label>
+                                    <div
+                                        className="flex flex-wrap gap-2"
+                                        role="group"
+                                        aria-label="Student involvement filter buttons"
+                                        id="students-filter"
                                     >
-                                        Completed
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            handleStatusFilterChange("returned")
-                                        }
-                                        className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                                            statusFilter === "returned"
-                                                ? "bg-indigo-600 text-white"
-                                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                        }`}
-                                        aria-pressed={
-                                            statusFilter === "returned"
-                                        }
-                                    >
-                                        Returned
-                                    </button>
+                                        <button
+                                            onClick={() =>
+                                                handleStudentsInvolvedFilterChange(
+                                                    ""
+                                                )
+                                            }
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                                studentsInvolvedFilter === ""
+                                                    ? "bg-indigo-600 text-white"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            }`}
+                                            aria-pressed={
+                                                studentsInvolvedFilter === ""
+                                            }
+                                        >
+                                            All
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleStudentsInvolvedFilterChange(
+                                                    "1"
+                                                )
+                                            }
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                                studentsInvolvedFilter === "1"
+                                                    ? "bg-indigo-600 text-white"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            }`}
+                                            aria-pressed={
+                                                studentsInvolvedFilter === "1"
+                                            }
+                                        >
+                                            With Students
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                handleStudentsInvolvedFilterChange(
+                                                    "0"
+                                                )
+                                            }
+                                            className={`px-4 py-2 rounded-md text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                                studentsInvolvedFilter === "0"
+                                                    ? "bg-indigo-600 text-white"
+                                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                            }`}
+                                            aria-pressed={
+                                                studentsInvolvedFilter === "0"
+                                            }
+                                        >
+                                            Without Students
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

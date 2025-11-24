@@ -40,6 +40,12 @@ class ConceptPaperController extends Controller
       $papers = $papers->where('status', $status);
     }
 
+    // Filter by student involvement status
+    $studentsInvolved = $request->query('students_involved');
+    if ($studentsInvolved !== null && $studentsInvolved !== '') {
+      $papers = $papers->where('students_involved', filter_var($studentsInvolved, FILTER_VALIDATE_BOOLEAN));
+    }
+
     return Inertia::render('ConceptPapers/Index', [
       'papers' => $papers->map(function ($paper) {
         return [
@@ -50,6 +56,9 @@ class ConceptPaperController extends Controller
           'nature_of_request' => $paper->nature_of_request,
           'status' => $paper->status,
           'submitted_at' => $paper->submitted_at,
+          'students_involved' => $paper->students_involved,
+          'deadline_date' => $paper->deadline_date,
+          'is_deadline_reached' => $paper->isDeadlineReached(),
           'requisitioner' => [
             'id' => $paper->requisitioner->id,
             'name' => $paper->requisitioner->name,
@@ -67,6 +76,7 @@ class ConceptPaperController extends Controller
       })->values(),
       'filters' => [
         'status' => $status,
+        'students_involved' => $studentsInvolved,
       ],
     ]);
   }
@@ -80,7 +90,18 @@ class ConceptPaperController extends Controller
   {
     $this->authorize('create', ConceptPaper::class);
 
-    return Inertia::render('ConceptPapers/Create');
+    // Fetch deadline options
+    $deadlineOptions = \App\Models\DeadlineOption::orderBy('sort_order')->get()->map(function ($option) {
+      return [
+        'key' => $option->key,
+        'label' => $option->label,
+        'days' => $option->days,
+      ];
+    });
+
+    return Inertia::render('ConceptPapers/Create', [
+      'deadlineOptions' => $deadlineOptions,
+    ]);
   }
 
   /**
@@ -93,6 +114,15 @@ class ConceptPaperController extends Controller
   {
     $validated = $request->validated();
     $user = Auth::user();
+
+    // Calculate deadline_date from deadline_option
+    if (isset($validated['deadline_option'])) {
+      $deadlineOption = \App\Models\DeadlineOption::where('key', $validated['deadline_option'])->first();
+      if ($deadlineOption) {
+        $validated['deadline_date'] = now()->addDays($deadlineOption->days);
+      }
+    }
+
     $conceptPaper = $this->conceptPaperService->create($validated, $user);
 
     // Handle file upload if provided
@@ -128,7 +158,9 @@ class ConceptPaperController extends Controller
       'stages.attachments.uploader',
       'attachments.uploader',
       'auditLogs.user',
-      'currentStage'
+      'currentStage',
+      'annotations.user',
+      'discrepancies.user'
     ]);
 
     $statusSummary = $this->conceptPaperService->getStatusSummary($conceptPaper);
@@ -143,11 +175,21 @@ class ConceptPaperController extends Controller
         'status' => $conceptPaper->status,
         'submitted_at' => $conceptPaper->submitted_at,
         'completed_at' => $conceptPaper->completed_at,
+        'students_involved' => $conceptPaper->students_involved,
+        'deadline_option' => $conceptPaper->deadline_option,
+        'deadline_date' => $conceptPaper->deadline_date,
+        'is_deadline_reached' => $conceptPaper->isDeadlineReached(),
         'requisitioner' => [
           'id' => $conceptPaper->requisitioner->id,
           'name' => $conceptPaper->requisitioner->name,
           'email' => $conceptPaper->requisitioner->email,
         ],
+        'current_stage' => $conceptPaper->currentStage ? [
+          'id' => $conceptPaper->currentStage->id,
+          'stage_name' => $conceptPaper->currentStage->stage_name,
+          'status' => $conceptPaper->currentStage->status,
+          'assigned_role' => $conceptPaper->currentStage->assigned_role,
+        ] : null,
         'stages' => $conceptPaper->stages->map(function ($stage) {
           return [
             'id' => $stage->id,
@@ -187,6 +229,37 @@ class ConceptPaperController extends Controller
             'download_url' => $attachment->getUrl(),
             'uploader' => [
               'name' => $attachment->uploader->name,
+            ],
+          ];
+        }),
+        'annotations' => $conceptPaper->annotations->map(function ($annotation) {
+          return [
+            'id' => $annotation->id,
+            'attachment_id' => $annotation->attachment_id,
+            'page_number' => $annotation->page_number,
+            'annotation_type' => $annotation->annotation_type,
+            'coordinates' => $annotation->coordinates,
+            'comment' => $annotation->comment,
+            'is_discrepancy' => $annotation->is_discrepancy,
+            'created_at' => $annotation->created_at,
+            'user' => [
+              'id' => $annotation->user->id,
+              'name' => $annotation->user->name,
+            ],
+          ];
+        }),
+        'discrepancies' => $conceptPaper->discrepancies->map(function ($discrepancy) {
+          return [
+            'id' => $discrepancy->id,
+            'attachment_id' => $discrepancy->attachment_id,
+            'page_number' => $discrepancy->page_number,
+            'annotation_type' => $discrepancy->annotation_type,
+            'coordinates' => $discrepancy->coordinates,
+            'comment' => $discrepancy->comment,
+            'created_at' => $discrepancy->created_at,
+            'user' => [
+              'id' => $discrepancy->user->id,
+              'name' => $discrepancy->user->name,
             ],
           ];
         }),

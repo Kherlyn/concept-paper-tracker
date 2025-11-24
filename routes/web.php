@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // show: Display stage details
     // complete: Mark stage complete and advance workflow
     // return: Send back to previous stage with remarks
+    // reject: Reject the concept paper
     // addAttachment: Upload supporting documents
     Route::prefix('workflow-stages')->name('workflow-stages.')->group(function () {
         Route::get('/{workflowStage}', [\App\Http\Controllers\WorkflowStageController::class, 'show'])
@@ -71,6 +72,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{workflowStage}/return', [\App\Http\Controllers\WorkflowStageController::class, 'return'])
             ->middleware('throttle:20,1')
             ->name('return');
+        Route::post('/{workflowStage}/reject', [\App\Http\Controllers\WorkflowStageController::class, 'reject'])
+            ->middleware('throttle:20,1')
+            ->name('reject');
         Route::post('/{workflowStage}/attachments', [\App\Http\Controllers\WorkflowStageController::class, 'addAttachment'])
             ->middleware('throttle:10,1')
             ->name('add-attachment');
@@ -95,8 +99,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ------------------------------------------------------------------------
     // Attachment Routes
     // ------------------------------------------------------------------------
+    Route::get('/attachments/{attachment}/preview', [\App\Http\Controllers\AttachmentController::class, 'preview'])
+        ->name('attachments.preview');
     Route::get('/attachments/{attachment}/download', [\App\Http\Controllers\AttachmentController::class, 'download'])
         ->name('attachments.download');
+
+    // ------------------------------------------------------------------------
+    // Annotation Routes
+    // ------------------------------------------------------------------------
+    Route::prefix('annotations')->name('annotations.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\AnnotationController::class, 'index'])
+            ->name('index');
+        Route::post('/', [\App\Http\Controllers\AnnotationController::class, 'store'])
+            ->middleware('throttle:60,1')
+            ->name('store');
+        Route::put('/{annotation}', [\App\Http\Controllers\AnnotationController::class, 'update'])
+            ->middleware('throttle:60,1')
+            ->name('update');
+        Route::delete('/{annotation}', [\App\Http\Controllers\AnnotationController::class, 'destroy'])
+            ->middleware('throttle:60,1')
+            ->name('destroy');
+    });
+
+    // Discrepancy summary for concept papers
+    Route::get('/concept-papers/{conceptPaper}/discrepancies', [\App\Http\Controllers\AnnotationController::class, 'discrepancies'])
+        ->name('concept-papers.discrepancies');
+
+    // ------------------------------------------------------------------------
+    // Deadline Options Routes (Public for form usage)
+    // ------------------------------------------------------------------------
+    Route::get('/deadline-options', [\App\Http\Controllers\DeadlineOptionController::class, 'index'])
+        ->name('deadline-options.index');
 
     // ------------------------------------------------------------------------
     // User Guide Routes
@@ -123,6 +156,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/users/{user}/toggle-active', [\App\Http\Controllers\AdminController::class, 'toggleActive'])
             ->middleware('throttle:20,1')
             ->name('users.toggle-active');
+
+        // User Activation Management
+        Route::patch('/users/{user}/toggle-activation', [\App\Http\Controllers\AdminController::class, 'toggleActivation'])
+            ->middleware('throttle:20,1')
+            ->name('users.toggle-activation');
+        Route::get('/users/{user}/assigned-stages', [\App\Http\Controllers\AdminController::class, 'getAssignedStages'])
+            ->name('users.assigned-stages');
+        Route::post('/workflow-stages/{stage}/reassign', [\App\Http\Controllers\AdminController::class, 'reassignStage'])
+            ->middleware('throttle:20,1')
+            ->name('stages.reassign');
+
+        // Deadline Options Management
+        Route::get('/deadline-options', [\App\Http\Controllers\DeadlineOptionController::class, 'index'])
+            ->name('deadline-options.index');
+        Route::post('/deadline-options', [\App\Http\Controllers\DeadlineOptionController::class, 'store'])
+            ->middleware('throttle:10,1')
+            ->name('deadline-options.store');
+        Route::put('/deadline-options/{key}', [\App\Http\Controllers\DeadlineOptionController::class, 'update'])
+            ->middleware('throttle:20,1')
+            ->name('deadline-options.update');
+        Route::delete('/deadline-options/{key}', [\App\Http\Controllers\DeadlineOptionController::class, 'destroy'])
+            ->middleware('throttle:20,1')
+            ->name('deadline-options.destroy');
 
         // Reports
         Route::get('/reports', [\App\Http\Controllers\AdminController::class, 'reports'])

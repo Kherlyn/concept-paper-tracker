@@ -18,7 +18,7 @@ class ConceptPaperPolicy
   public function view(User $user, ConceptPaper $conceptPaper): bool
   {
     // Admin can view all papers
-    if ($user->hasRole('admin')) {
+    if ($user->role === 'admin') {
       return true;
     }
 
@@ -44,7 +44,7 @@ class ConceptPaperPolicy
    */
   public function create(User $user): bool
   {
-    return $user->hasRole('requisitioner') && $user->is_active;
+    return $user->role === 'requisitioner' && $user->is_active;
   }
 
   /**
@@ -91,6 +91,25 @@ class ConceptPaperPolicy
    */
   public function delete(User $user, ConceptPaper $conceptPaper): bool
   {
-    return $user->hasRole('admin') && $user->is_active;
+    return $user->role === 'admin' && $user->is_active;
+  }
+
+  /**
+   * Determine if the user can create annotations on the concept paper.
+   * Users can annotate papers they have access to view.
+   *
+   * @param User $user
+   * @param ConceptPaper $conceptPaper
+   * @return bool
+   */
+  public function annotate(User $user, ConceptPaper $conceptPaper): bool
+  {
+    // User must be active
+    if (!$user->is_active) {
+      return false;
+    }
+
+    // Use the view policy logic - if user can view, they can annotate
+    return $this->view($user, $conceptPaper);
   }
 }

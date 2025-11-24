@@ -32,6 +32,9 @@ class ConceptPaperService
       'department' => $data['department'],
       'title' => $data['title'],
       'nature_of_request' => $data['nature_of_request'],
+      'students_involved' => $data['students_involved'] ?? true,
+      'deadline_option' => $data['deadline_option'] ?? null,
+      'deadline_date' => $data['deadline_date'] ?? null,
       'submitted_at' => now(),
       'status' => 'pending',
     ]);
@@ -87,9 +90,9 @@ class ConceptPaperService
     $allowedMimeTypes = config('upload.allowed_mime_types');
     $storageDisk = config('upload.storage_disk');
 
-    // Validate file type (PDF only)
+    // Validate file type
     if (!in_array($file->getMimeType(), $allowedMimeTypes)) {
-      throw new \Exception('Only PDF files are allowed.');
+      throw new \Exception('Only PDF and Word documents (doc, docx) are allowed.');
     }
 
     // Validate file size
@@ -224,10 +227,15 @@ class ConceptPaperService
     })->count();
 
     // Calculate average processing time for completed papers
-    $avgProcessingTime = ConceptPaper::where('status', 'completed')
+    $completedPapersWithDates = ConceptPaper::where('status', 'completed')
       ->whereNotNull('completed_at')
-      ->selectRaw('AVG(TIMESTAMPDIFF(DAY, submitted_at, completed_at)) as avg_days')
-      ->value('avg_days');
+      ->get(['submitted_at', 'completed_at']);
+
+    $avgProcessingTime = $completedPapersWithDates->count() > 0
+      ? $completedPapersWithDates->avg(function ($paper) {
+        return $paper->submitted_at->diffInDays($paper->completed_at);
+      })
+      : 0;
 
     // Get stage statistics
     $stageStats = [];
@@ -260,7 +268,7 @@ class ConceptPaperService
         'returned' => $returnedPapers,
       ],
       'overdue_papers' => $overduePapers,
-      'avg_processing_days' => $avgProcessingTime ? round($avgProcessingTime, 1) : 0,
+      'avg_processing_days' => round($avgProcessingTime, 1),
       'stage_statistics' => $stageStats,
     ];
   }

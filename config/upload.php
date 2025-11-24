@@ -30,12 +30,14 @@ return [
     |--------------------------------------------------------------------------
     |
     | The MIME types that are allowed for concept paper attachments.
-    | Currently restricted to PDF files only.
+    | Supports PDF and Word documents (doc, docx).
     |
     */
 
   'allowed_mime_types' => [
     'application/pdf',
+    'application/msword', // .doc
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
   ],
 
   /*
@@ -49,6 +51,8 @@ return [
 
   'allowed_extensions' => [
     'pdf',
+    'doc',
+    'docx',
   ],
 
   /*

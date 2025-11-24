@@ -5,8 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class ConceptPaper extends Model
 {
@@ -27,6 +25,9 @@ class ConceptPaper extends Model
     'current_stage_id',
     'status',
     'completed_at',
+    'students_involved',
+    'deadline_option',
+    'deadline_date',
   ];
 
   /**
@@ -39,6 +40,8 @@ class ConceptPaper extends Model
     return [
       'submitted_at' => 'datetime',
       'completed_at' => 'datetime',
+      'students_involved' => 'boolean',
+      'deadline_date' => 'datetime',
     ];
   }
 
@@ -151,6 +154,26 @@ class ConceptPaper extends Model
   }
 
   /**
+   * Relationship: All annotations for this concept paper.
+   *
+   * @return \Illuminate\Database\Eloquent\Relations\HasMany
+   */
+  public function annotations()
+  {
+    return $this->hasMany(Annotation::class, 'concept_paper_id');
+  }
+
+  /**
+   * Relationship: All discrepancies (filtered annotations) for this concept paper.
+   *
+   * @return \Illuminate\Database\Eloquent\Relations\HasMany
+   */
+  public function discrepancies()
+  {
+    return $this->hasMany(Annotation::class, 'concept_paper_id')->where('is_discrepancy', true);
+  }
+
+  /**
    * Check if the concept paper has any overdue stages.
    *
    * @return bool
@@ -172,6 +195,18 @@ class ConceptPaper extends Model
       ->whereIn('status', ['pending', 'in_progress'])
       ->where('deadline', '<', now())
       ->exists();
+  }
+
+  /**
+   * Check if the concept paper has reached its overall deadline.
+   *
+   * @return bool
+   */
+  public function isDeadlineReached(): bool
+  {
+    return $this->deadline_date &&
+      $this->deadline_date->isPast() &&
+      $this->status !== 'completed';
   }
 
   /**
