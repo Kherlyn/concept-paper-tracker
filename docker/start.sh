@@ -35,6 +35,10 @@ php artisan storage:link --force 2>/dev/null || true
 echo "Running migrations..."
 php artisan migrate --force 2>&1 || echo "Migration warning (continuing...)"
 
+# Run database seeders
+echo "Running database seeders..."
+php artisan db:seed --force 2>&1 || echo "Seeding warning (may already be seeded)"
+
 # Now safe to clear caches (tables exist after migration)
 echo "Clearing caches..."
 php artisan config:clear 2>/dev/null || true
