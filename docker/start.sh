@@ -16,10 +16,10 @@ mkdir -p storage/logs
 mkdir -p bootstrap/cache
 
 touch storage/logs/laravel.log
-chown -R www-data:www-data storage bootstrap/cache
+chown -R www-data:www-data storage bootstrap/cache database
 chmod -R 775 storage bootstrap/cache
 
-# Create SQLite database if using SQLite
+# Create SQLite database if using SQLite or no DB_CONNECTION set
 if [ "$DB_CONNECTION" = "sqlite" ] || [ -z "$DB_CONNECTION" ]; then
     echo "Setting up SQLite database..."
     touch database/database.sqlite
@@ -31,23 +31,23 @@ fi
 echo "Creating storage link..."
 php artisan storage:link --force 2>/dev/null || true
 
-# Clear all caches first
-echo "Clearing caches..."
-php artisan config:clear
-php artisan cache:clear
-php artisan route:clear
-php artisan view:clear
-
-# Run migrations
+# IMPORTANT: Run migrations FIRST before trying to clear database-based cache
 echo "Running migrations..."
-php artisan migrate --force 2>&1 || echo "Migration warning (may be OK if tables exist)"
+php artisan migrate --force 2>&1 || echo "Migration warning (continuing...)"
 
-# Only cache in production
+# Now safe to clear caches (tables exist after migration)
+echo "Clearing caches..."
+php artisan config:clear 2>/dev/null || true
+php artisan cache:clear 2>/dev/null || true
+php artisan route:clear 2>/dev/null || true
+php artisan view:clear 2>/dev/null || true
+
+# Only cache in production with debug off
 if [ "$APP_ENV" = "production" ] && [ "$APP_DEBUG" != "true" ]; then
     echo "Caching for production..."
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
+    php artisan config:cache || true
+    php artisan route:cache || true
+    php artisan view:cache || true
 fi
 
 # Update nginx config with dynamic port
