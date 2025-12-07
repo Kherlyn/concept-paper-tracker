@@ -5,6 +5,7 @@ import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
 import NotificationBell from "@/Components/NotificationBell";
 import Toast from "@/Components/Toast";
 import ErrorBoundary from "@/Components/ErrorBoundary";
+import ReportErrorButton from "@/Components/ReportErrorButton";
 import useHttpErrorHandler from "@/Hooks/useHttpErrorHandler";
 import { Link, usePage } from "@inertiajs/react";
 import { useState, useMemo } from "react";
@@ -34,6 +35,7 @@ export default function AuthenticatedLayout({ header, children }) {
                     "requisitioner",
                     "sps",
                     "vp_acad",
+                    "senior_vp",
                     "auditor",
                     "accounting",
                     "admin",
@@ -58,11 +60,11 @@ export default function AuthenticatedLayout({ header, children }) {
         }
 
         // Approver-specific items
-        if (["sps", "vp_acad", "auditor", "accounting"].includes(user.role)) {
+        if (["sps", "vp_acad", "senior_vp", "auditor", "accounting"].includes(user.role)) {
             items.push({
                 href: route("concept-papers.index"),
                 label: "Pending Approvals",
-                roles: ["sps", "vp_acad", "auditor", "accounting"],
+                roles: ["sps", "vp_acad", "senior_vp", "auditor", "accounting"],
             });
         }
 
@@ -82,6 +84,11 @@ export default function AuthenticatedLayout({ header, children }) {
                 {
                     href: route("admin.reports"),
                     label: "Reports",
+                    roles: ["admin"],
+                },
+                {
+                    href: route("admin.error-reports.index"),
+                    label: "Error Reports",
                     roles: ["admin"],
                 }
             );
@@ -342,6 +349,9 @@ export default function AuthenticatedLayout({ header, children }) {
                 <main id="main-content" role="main" tabIndex="-1">
                     {children}
                 </main>
+
+                {/* Floating Report Error Button - Available to all users */}
+                <ReportErrorButton />
             </div>
         </ErrorBoundary>
     );

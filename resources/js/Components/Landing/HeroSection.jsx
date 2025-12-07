@@ -18,7 +18,7 @@ export default function HeroSection({ canRegister }) {
                 <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
                     Digital workflow management for concept papers with budget
                     allocation. Track, approve, and manage submissions
-                    efficiently through a 9-step automated process.
+                    efficiently through a 10-step automated process.
                 </p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
                     {canRegister && (

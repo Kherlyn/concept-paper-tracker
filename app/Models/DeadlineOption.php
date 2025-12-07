@@ -12,12 +12,14 @@ class DeadlineOption extends Model
   protected $fillable = [
     'key',
     'label',
+    'hours',
     'days',
     'sort_order',
   ];
 
   protected $casts = [
-    'days' => 'integer',
+    'hours' => 'integer',
+    'days' => 'decimal:3',
     'sort_order' => 'integer',
   ];
 }

@@ -11,7 +11,7 @@ const features = [
     {
         title: "Digital Workflow",
         description:
-            "Automated routing through 9-step approval process with real-time tracking",
+            "Automated routing through 10-step approval process with real-time tracking",
         icon: ArrowPathIcon,
     },
     {

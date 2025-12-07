@@ -78,25 +78,40 @@ return [
     */
 
   'deadline_options' => [
+    '3_hours' => [
+      'label' => '3 Hours',
+      'hours' => 3,
+      'days' => 0.125,
+    ],
+    '6_hours' => [
+      'label' => '6 Hours',
+      'hours' => 6,
+      'days' => 0.25,
+    ],
+    '12_hours' => [
+      'label' => '12 Hours',
+      'hours' => 12,
+      'days' => 0.5,
+    ],
+    '1_day' => [
+      'label' => '1 Day',
+      'hours' => 24,
+      'days' => 1,
+    ],
+    '3_days' => [
+      'label' => '3 Days',
+      'hours' => 72,
+      'days' => 3,
+    ],
     '1_week' => [
       'label' => '1 Week',
+      'hours' => 168,
       'days' => 7,
     ],
     '2_weeks' => [
       'label' => '2 Weeks',
+      'hours' => 336,
       'days' => 14,
-    ],
-    '1_month' => [
-      'label' => '1 Month',
-      'days' => 30,
-    ],
-    '2_months' => [
-      'label' => '2 Months',
-      'days' => 60,
-    ],
-    '3_months' => [
-      'label' => '3 Months',
-      'days' => 90,
     ],
   ],
 ];

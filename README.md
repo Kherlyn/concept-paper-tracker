@@ -7,8 +7,8 @@ A web application for digitizing and automating the approval workflow for concep
 -   **Public Landing Page**: Informative homepage showcasing system features, workflow process, and user roles
 -   **Enhanced User Registration**: Capture academic information including school year and student number
 -   **Comprehensive User Guide**: In-app documentation with role-specific guides and FAQs
--   **Role-Based Access Control**: Six distinct user roles (Requisitioner, SPS, VP Acad, Auditor, Accounting, Admin)
--   **9-Stage Approval Workflow**: Automated routing through predefined approval stages
+-   **Role-Based Access Control**: Seven distinct user roles (Requisitioner, SPS, VP Acad, Senior VP, Auditor, Accounting, Admin)
+-   **10-Stage Approval Workflow**: Automated routing through predefined approval stages
 -   **Email Notifications**: Automated notifications for stage assignments, overdue tasks, completions, and returns
 -   **Deadline Tracking**: Automatic deadline calculation and overdue alerts
 -   **Audit Trail**: Complete history of all actions taken on concept papers
@@ -291,17 +291,18 @@ Administrators have additional capabilities:
 
 ## Workflow Stages
 
-The system implements a 9-stage sequential approval process:
+The system implements a 10-stage sequential approval process:
 
 1. **SPS Review** (1 day) - School Principal/Supervisor
 2. **VP Acad Review** (3 days) - Vice President for Academic Affairs
 3. **Auditing Review** (3 days) - Auditor
-4. **Acad Copy Distribution** (1 day) - VP Acad
-5. **Auditing Copy Distribution** (1 day) - Auditor
-6. **Voucher Preparation** (1 day) - Accounting
-7. **Audit & Countersign** (1 day) - Auditor
-8. **Cheque Preparation** (4 days) - Accounting
-9. **Budget Release** (1 day) - Accounting
+4. **Senior VP Approval** (2 days) - Senior Vice President
+5. **Acad Copy Distribution** (1 day) - VP Acad
+6. **Auditing Copy Distribution** (1 day) - Auditor
+7. **Voucher Preparation** (1 day) - Accounting
+8. **Audit & Countersign** (1 day) - Auditor
+9. **Cheque Preparation** (4 days) - Accounting
+10. **Budget Release** (1 day) - Accounting
 
 ## Background Jobs and Scheduled Tasks
 
@@ -408,7 +409,7 @@ The application includes a comprehensive in-app user guide accessible to all aut
 2. **Requisitioner Guide**: Submitting and tracking concept papers
 3. **Approver Guide**: Reviewing, approving, and returning papers
 4. **Administrator Guide**: User management, reports, and troubleshooting
-5. **Workflow Process**: Complete 9-stage workflow documentation
+5. **Workflow Process**: Complete 10-stage workflow documentation
 6. **FAQ**: Frequently asked questions and support information
 
 ### Updating User Guide Content

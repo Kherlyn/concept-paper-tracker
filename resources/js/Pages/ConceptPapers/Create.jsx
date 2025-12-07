@@ -47,9 +47,26 @@ export default function Create() {
 
         if (!selectedOption) return null;
 
-        const today = new Date();
-        const deadlineDate = new Date(today);
-        deadlineDate.setDate(today.getDate() + selectedOption.days);
+        const now = new Date();
+        const deadlineDate = new Date(now);
+
+        // Use hours if available, otherwise fall back to days
+        if (selectedOption.hours) {
+            deadlineDate.setTime(now.getTime() + (selectedOption.hours * 60 * 60 * 1000));
+        } else {
+            deadlineDate.setDate(now.getDate() + selectedOption.days);
+        }
+
+        // For deadlines less than 24 hours, show time as well
+        if (selectedOption.hours && selectedOption.hours < 24) {
+            return deadlineDate.toLocaleString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+        }
 
         return deadlineDate.toLocaleDateString("en-US", {
             year: "numeric",
@@ -339,7 +356,7 @@ export default function Create() {
                                     tracking number
                                 </li>
                                 <li>
-                                    It will enter the 9-step approval workflow
+                                    It will enter the 10-step approval workflow
                                     starting with SPS Review
                                 </li>
                                 <li>

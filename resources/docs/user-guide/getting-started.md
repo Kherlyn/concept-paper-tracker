@@ -2,7 +2,7 @@
 
 ## System Overview
 
-The Concept Paper Tracker is a digital workflow management system designed to streamline the approval process for concept papers with budget allocation. The system replaces manual paper-based routing with an automated 9-step approval workflow.
+The Concept Paper Tracker is a digital workflow management system designed to streamline the approval process for concept papers with budget allocation. The system replaces manual paper-based routing with an automated 10-step approval workflow.
 
 ### Key Benefits
 
@@ -13,42 +13,45 @@ The Concept Paper Tracker is a digital workflow management system designed to st
 
 ### Workflow Overview Diagram
 
-The system follows a 9-step approval process:
+The system follows a 10-step approval process:
 
 ```mermaid
 graph TD
     A[1. Requisitioner Submits Paper] --> B[2. SPS Review]
     B --> C[3. VP Acad Review]
     C --> D[4. Auditing Review]
-    D --> E[5. Acad Copy Distribution]
-    E --> F[6. Auditing Copy Distribution]
-    F --> G[7. Voucher Preparation]
-    G --> H[8. Audit & Countersign]
-    H --> I[9. Cheque Preparation]
-    I --> J[10. Budget Release - Complete]
+    D --> E[5. Senior VP Approval]
+    E --> F[6. Acad Copy Distribution]
+    F --> G[7. Auditing Copy Distribution]
+    G --> H[8. Voucher Preparation]
+    H --> I[9. Audit & Countersign]
+    I --> J[10. Cheque Preparation]
+    J --> K[11. Budget Release - Complete]
 
     style A fill:#e3f2fd
     style B fill:#fff3e0
     style C fill:#fff3e0
     style D fill:#fff3e0
-    style E fill:#fff3e0
+    style E fill:#ffe0b2
     style F fill:#fff3e0
     style G fill:#fff3e0
     style H fill:#fff3e0
     style I fill:#fff3e0
-    style J fill:#c8e6c9
+    style J fill:#fff3e0
+    style K fill:#c8e6c9
 ```
 
 ### Who Uses This System?
 
-The system serves six distinct user roles:
+The system serves seven distinct user roles:
 
 1. **Requisitioners** - Submit and track concept papers
 2. **SPS (School Principal/Supervisor)** - Initial review and approval
 3. **VP Academic Affairs** - Academic review and distribution
-4. **Auditor** - Audit review and countersigning
-5. **Accounting** - Voucher and cheque preparation
-6. **Administrator** - System management and reporting
+4. **Senior VP** - Executive-level approval and oversight
+5. **Auditor** - Audit review and countersigning
+6. **Accounting** - Voucher and cheque preparation
+7. **Administrator** - System management and reporting
 
 #### User Roles and Responsibilities Diagram
 

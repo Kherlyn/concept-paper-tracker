@@ -132,6 +132,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('deadline-options.index');
 
     // ------------------------------------------------------------------------
+    // Error Report Routes (All Authenticated Users)
+    // ------------------------------------------------------------------------
+    Route::post('/error-reports', [\App\Http\Controllers\ErrorReportController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('error-reports.store');
+
+    // ------------------------------------------------------------------------
     // User Guide Routes
     // ------------------------------------------------------------------------
     Route::get('/user-guide', [\App\Http\Controllers\UserGuideController::class, 'index'])
@@ -189,6 +196,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/pdf/{conceptPaper}', [\App\Http\Controllers\AdminController::class, 'downloadPdf'])
             ->middleware('throttle:10,1')
             ->name('reports.pdf');
+
+        // Error Reports Management
+        Route::get('/error-reports', [\App\Http\Controllers\ErrorReportController::class, 'index'])
+            ->name('error-reports.index');
+        Route::put('/error-reports/{errorReport}', [\App\Http\Controllers\ErrorReportController::class, 'update'])
+            ->middleware('throttle:20,1')
+            ->name('error-reports.update');
+        Route::delete('/error-reports/{errorReport}', [\App\Http\Controllers\ErrorReportController::class, 'destroy'])
+            ->middleware('throttle:20,1')
+            ->name('error-reports.destroy');
     });
 });
 

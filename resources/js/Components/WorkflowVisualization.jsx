@@ -7,7 +7,7 @@ import {
 /**
  * WorkflowVisualization Component
  *
- * A reusable component that displays the 9-step workflow process with visual connections,
+ * A reusable component that displays the 10-step workflow process with visual connections,
  * stage descriptions, and time estimates. Can be used in both the landing page and user guide.
  *
  * @param {Object} props
@@ -42,41 +42,48 @@ const defaultStages = [
     },
     {
         number: 4,
+        name: "Senior VP Approval",
+        role: "Senior Vice President",
+        maxDays: 2,
+        description: "Executive-level approval and oversight",
+    },
+    {
+        number: 5,
         name: "Acad Copy Distribution",
         role: "VP Academic Affairs",
         maxDays: 1,
         description: "Distribute academic copy to relevant parties",
     },
     {
-        number: 5,
+        number: 6,
         name: "Auditing Copy Distribution",
         role: "Auditor",
         maxDays: 1,
         description: "Distribute auditing copy for records",
     },
     {
-        number: 6,
+        number: 7,
         name: "Voucher Preparation",
         role: "Accounting",
         maxDays: 1,
         description: "Prepare payment voucher with documentation",
     },
     {
-        number: 7,
+        number: 8,
         name: "Audit & Countersign",
         role: "Auditor",
         maxDays: 1,
         description: "Final audit review and countersigning",
     },
     {
-        number: 8,
+        number: 9,
         name: "Cheque Preparation",
         role: "Accounting",
         maxDays: 4,
         description: "Process payment and prepare cheque",
     },
     {
-        number: 9,
+        number: 10,
         name: "Budget Release",
         role: "Accounting",
         maxDays: 1,
@@ -100,11 +107,9 @@ function WorkflowStage({
             {/* Stage Number and Connector */}
             <div className="flex flex-col items-center mr-4">
                 <div
-                    className={`flex items-center justify-center ${
-                        isMinimal ? "w-8 h-8" : "w-10 h-10"
-                    } bg-indigo-600 text-white rounded-full font-bold ${
-                        isMinimal ? "text-sm" : "text-base"
-                    } shadow-md`}
+                    className={`flex items-center justify-center ${isMinimal ? "w-8 h-8" : "w-10 h-10"
+                        } bg-indigo-600 text-white rounded-full font-bold ${isMinimal ? "text-sm" : "text-base"
+                        } shadow-md`}
                 >
                     {stage.number || index + 1}
                 </div>
@@ -119,16 +124,14 @@ function WorkflowStage({
             {/* Stage Content */}
             <div className={`flex-1 ${isLast ? "" : "pb-8"}`}>
                 <div
-                    className={`bg-white ${
-                        isMinimal ? "p-3" : "p-4"
-                    } rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow`}
+                    className={`bg-white ${isMinimal ? "p-3" : "p-4"
+                        } rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow`}
                 >
                     {/* Stage Header */}
                     <div className="flex justify-between items-start mb-2">
                         <h4
-                            className={`font-semibold text-gray-900 ${
-                                isMinimal ? "text-sm" : "text-base"
-                            }`}
+                            className={`font-semibold text-gray-900 ${isMinimal ? "text-sm" : "text-base"
+                                }`}
                         >
                             {stage.name}
                         </h4>
@@ -152,9 +155,8 @@ function WorkflowStage({
                     {/* Stage Description */}
                     {showDescriptions && stage.description && (
                         <p
-                            className={`text-sm text-gray-500 ${
-                                isDetailed ? "mt-2" : ""
-                            }`}
+                            className={`text-sm text-gray-500 ${isDetailed ? "mt-2" : ""
+                                }`}
                         >
                             {stage.description}
                         </p>

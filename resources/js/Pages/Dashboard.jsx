@@ -35,6 +35,7 @@ export default function Dashboard({
             requisitioner: "Requisitioner",
             sps: "SPS",
             vp_acad: "VP Academic",
+            senior_vp: "Senior VP",
             auditor: "Auditor",
             accounting: "Accounting",
             admin: "Administrator",
@@ -283,9 +284,8 @@ export default function Dashboard({
                         dashboard_data.my_papers.map((paper) => (
                             <div
                                 key={paper.id}
-                                className={`p-4 space-y-3 ${
-                                    paper.is_overdue ? "bg-red-50" : ""
-                                }`}
+                                className={`p-4 space-y-3 ${paper.is_overdue ? "bg-red-50" : ""
+                                    }`}
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1 min-w-0">
@@ -542,9 +542,8 @@ export default function Dashboard({
                         {dashboard_data.assigned_stages.map((stage) => (
                             <div
                                 key={stage.id}
-                                className={`p-4 space-y-3 ${
-                                    stage.is_overdue ? "bg-red-50" : ""
-                                }`}
+                                className={`p-4 space-y-3 ${stage.is_overdue ? "bg-red-50" : ""
+                                    }`}
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="flex-1 min-w-0">
@@ -1038,12 +1037,12 @@ export default function Dashboard({
                                                     <div className="relative pb-8">
                                                         {index !==
                                                             recent_activity.length -
-                                                                1 && (
-                                                            <span
-                                                                className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
-                                                                aria-hidden="true"
-                                                            />
-                                                        )}
+                                                            1 && (
+                                                                <span
+                                                                    className="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200"
+                                                                    aria-hidden="true"
+                                                                />
+                                                            )}
                                                         <div className="relative flex space-x-3">
                                                             <div>
                                                                 <span className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
